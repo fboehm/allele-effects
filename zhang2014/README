@@ -1,0 +1,1 @@
+although the downloaded files are named *.zip, they really are tar.gz files, and should be inflated with tar zxvf *.zip, for example.
