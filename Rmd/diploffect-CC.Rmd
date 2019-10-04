@@ -1,0 +1,18 @@
+---
+title: "Diploffect for QTL effects"
+author: "Frederick J. Boehm"
+date: "10/4/2019"
+output: html_document
+---
+
+## Goals
+
+We want to use Diploffect to analyze the QTLs from CC lines. 
+
+```{r}
+library(Diploffect.INLA)
+```
+
+
+
+
