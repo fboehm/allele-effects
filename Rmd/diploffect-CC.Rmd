@@ -11,6 +11,122 @@ We want to use Diploffect to analyze the QTLs from CC lines.
 
 ```{r}
 library(Diploffect.INLA)
+library(tidyverse)
+library(qtl2)
+```
+
+## Email from Rick (Dated Oct 7, 2019)
+
+
+> Hi Fred,
+
+> This is all a bit complicated, due to the CC042 issue. We decided to remap using the CC042 covariate, and that will take a few days. However, it’s not likely to change much, and it’s probably good to get started with Diploffect to see if it makes any real difference.
+
+> Much of what you need is in the Dropbox I shared a while back:
+
+> https://www.dropbox.com/sh/9vlwgt673vj36aw/AAAskIrEMErQrWDANPZrSxO2a?dl=0
+
+> reduced_map_qtl2_mapping_objects.Rdata — qtl2 mapping objects including the covariate data frame
+pheno_Tn-seq_var-noVar_P10.csv — the phenotype matrix
+
+> There is also directory named ‘hotspots_07OCT2019’ with additional stuff:
+
+> 36-state_genos subdirectory that contains the 36-state genotype probs for the CC panel (these are megaMUGA calls, so you will probably want to filter out probes not present in the qtl2 8-state genoprobs file used for mapping)
+
+## Loading the data objects
+
+I downloaded the files from Dropbox and stored them in the "data" subdirectory.
+
+Now, let's examine the contents.
+
+```{r}
+load(here::here("data/hotspot_allele_effects5_info.Rdata"))
+```
+
+The above line loads the Rdata file, which contains two objects. One is a matrix, `out.cov`, and the other is a list of dataframes, `peaks.list`.
+
+It appears that the list of data frames has one dataframe per chromosome, except that some chromosomes are absent. The length of the list is 10. It must be one dataframe per hotspot. That would explain why the every row in a single dataframe has similar peak positions and identical chromosome numbers.
+
+Let's look at a single peak in the "first" hotspot, ie, that on Chr 4.
+
+```{r}
+peaks.list[[1]]
+```
+
+Specifically, I'll examine a stronger trait (`RVBD_1204c`), then a weaker trait (`RVBD_0692`). It's conceivable that the Bayesian model might make more improvement in the weaker mapping trait.
+
+## Diploffect for the stronger trait
+
+We need to get:
+
+1. `RVBD_1204c` phenotype data
+1. genotype probs matrix (for all mice) at the marker of interest (at 64.70409)
+
+We can also use `qtl2` to calculate a loco kinship matrix.
+
+
+```{r}
+dir(here::here("data", "36-state_genos")) -> fns
+list() -> gp
+i <- 1
+for (i in 1:length(fns)){
+  fn <- fns[i]
+  load(here::here("data", "36-state_genos", fn))
+  gp[[i]] <- prsmth
+}
+gparray <- array(as.numeric(unlist(gp)), dim=c(93921, 36, 52))
+dimnames(gparray)[[1]] <- rownames(prsmth)
+dimnames(gparray)[[2]] <- colnames(prsmth)
+dimnames(gparray)[[3]] <- fns
+```
+
+```{r test-array-structure}
+# need to double check that the array is in the order that we expect. 
+array(1:8, dim = c(2, 2, 2))
+```
+
+
+We also need a map object to tell us which slice of the array corresponds to the marker of interest.
+
+```{r load-mapping-inputs}
+load(here::here("data", "reduced_map_qtl2_mapping_objects.Rdata"))
+```
+
+```{r, get-geno-matrix}
+map_tib <- tibble(position = map.1$`4`, marker = names(map.1$`4`))
+
+ann <- peaks.list[[1]] %>%
+  as_tibble() %>%
+  filter(lod == max(lod)) %>%
+  inner_join(map_tib, by = c("pos" = "position"))
+prob_slice <- gparray[which(dimnames(gparray)[[1]] == ann$marker), , ] %>% t()
+```
+
+```{r, get-trait}
+pre_trait <- readr::read_csv(here::here("data/pheno_Tn-seq_var-noVar_P10.csv")) %>% dplyr::select(X1, ann$lodcolumn) %>%
+  dplyr::rename(SUBJECT.NAME = X1)
+tr <- as_tibble(addcovar) %>%
+  mutate(SUBJECT.NAME = rownames(addcovar)) %>% 
+  inner_join(pre_trait)
+```
+
+```{r calc-kinship}
+kinship <- calc_kinship(genoprobs.1, "loco")
+```
+
+```{r, fix-rownames}
+rn <- rownames(prob_slice) %>%
+  stringr::str_split(".genotype.probs.Rdata") %>%
+  purrr::map_chr(function(x)x[1])
+rn -> rownames(prob_slice)
+```
+
+```{r run_diplo}
+out <- run.diploffect.inla(RVBD_1204c ~ block2 + block3, 
+                    data = tr,
+                    K = kinship$`4`,
+                    prob.matrix = prob_slice,
+                    num.draws = 2)
 ```
 
 
