@@ -122,11 +122,13 @@ rn -> rownames(prob_slice)
 ```
 
 ```{r run_diplo}
+system.time(
 out <- run.diploffect.inla(RVBD_1204c ~ block2 + block3, 
                     data = tr,
                     K = kinship$`4`,
                     prob.matrix = prob_slice,
-                    num.draws = 2)
+                    num.draws = 25)
+)
 ```
 
 
