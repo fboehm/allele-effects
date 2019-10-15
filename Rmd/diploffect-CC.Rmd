@@ -127,7 +127,7 @@ out <- run.diploffect.inla(RVBD_1204c ~ block2 + block3,
                     data = tr,
                     K = kinship$`4`,
                     prob.matrix = prob_slice,
-                    num.draws = 25)
+                    num.draws = 1000)
 )
 ```
 
