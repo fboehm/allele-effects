@@ -5,26 +5,79 @@ date: "10/24/2019"
 output: html_document
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+```{r}
+library(tidyverse)
+library(TIMBR)
 ```
 
-## R Markdown
-
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r cars}
-summary(cars)
+```{r read-csv}
+(peaks <- readr::read_csv("../data/clinical_suggestive_peak_info.csv"))
+traits <- readr::read_csv("../data/pheno_all_clinical_v4_suggestive.csv") %>%
+  rename(mouse_id = X1)
 ```
 
-## Including Plots
-
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
+```{r load-genotypes}
+fns <- dir("../data/36-state-genotypes")
+geno <- list()
+for (i in seq_along(fns)){
+  load(file.path("../data/36-state-genotypes", fns[i]))
+  geno[[i]] <- prsmth
+}
+names(geno) <- stringr::str_split_fixed(fns, ".genotype.probs.Rdata", 2)[, 1]
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+```{r prior_M-define}
+##### From GK example code
+# Specify allelic series prior
+# Suggested by Wes
+# Influences how much prior weight it places on more or less complicated allelic series
+prior_M <- list(model.type = "crp", # crp - Chinese Restaurant Process
+                prior.alpha.type = "gamma",
+                prior.alpha.shape = 1,
+                prior.alpha.rate = 2.333415)
+```
+
+
+```{r load-covariates}
+load("../data/reduced_map_qtl2_mapping_objects.Rdata")
+dat <- addcovar %>%
+  as_tibble() %>%
+  mutate(mouse_id = rownames(addcovar)) %>%
+  inner_join(foo, by = "mouse_id")
+```
+
+
+```{r timbr}
+data(mcv.data) # get A matrix
+# get genotypes
+foo <- peaks %>%
+  dplyr::select(probe) %>%
+  filter(probe == probe[peak_num]) %>%
+  purrr::map(.f = function(probe) {lapply(X = geno, FUN = function(gg) gg[rownames(gg) %in% probe, drop = FALSE])}
+             ) %>%
+  bind_cols() %>%
+  as.matrix() %>%
+  t() %>%
+  as_tibble() %>%
+  mutate(mouse_id = names(geno)) %>%
+  (function(x){colnames(x)[1:36] <- colnames(geno[[1]]); return(x)}) %>%
+  inner_join(traits, by = "mouse_id")
+# define prior_d
+prior_d <- list(P = dat %>%
+                  dplyr::select(AA:GH) %>%
+                  as.matrix() %>%
+                  (function(x){rownames(x) <- dat$mouse_id; return(x)}),
+                A = mcv.data$prior.D$A, # Describes the mapping from full genoprobs to additive dosages
+                fixed.diplo = FALSE)
+
+## TIMBR call
+results <- TIMBR(y = foo %>%
+                   dplyr::select(peaks$lodcolumn[peak_num]), # Order needs to match genoprobs
+                 Z = cbind(rep(1, n), ),
+                 prior.D = prior_d,
+                 prior.M = prior_M)
+
+```
+
+
