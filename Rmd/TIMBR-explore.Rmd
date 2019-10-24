@@ -1,0 +1,12 @@
+---
+title: "Exploring TIMBR & allele number inference"
+author: "Frederick J. Boehm"
+date: "10/23/2019"
+output: html_document
+---
+
+```{r}
+library(tidyverse)
+library(TIMBR)
+```
+
