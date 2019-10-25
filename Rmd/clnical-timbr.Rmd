@@ -49,42 +49,43 @@ data(mcv.data) # get A matrix
 results <- list()
 if (!file.exists("../data/timbr-clinical-results.rds")){
   for (peak_num in seq_along(1:nrow(peaks))){
-  # get genotypes
-  foo <- peaks %>%
-    dplyr::select(probe) %>%
-    filter(probe == probe[peak_num]) %>%
-    purrr::map(.f = function(probe) {lapply(X = geno, FUN = function(gg) gg[rownames(gg) %in% probe, drop = FALSE])}
-             ) %>%
-    bind_cols() %>%
-    as.matrix() %>%
-    t() %>%
+    # get genotypes
+    foo <- peaks %>%
+      dplyr::select(probe) %>%
+      filter(probe == probe[peak_num]) %>%
+      purrr::map(.f = function(probe) {lapply(X = geno, FUN = function(gg) gg[rownames(gg) %in% probe, drop = FALSE])}
+               ) %>%
+      bind_cols() %>%
+      as.matrix() %>%
+      t() %>%
+      as.data.frame() %>%
+      as_tibble() %>%
+      mutate(mouse_id = names(geno)) %>%
+      (function(x){colnames(x)[1:36] <- colnames(geno[[1]]); return(x)}) %>%
+      inner_join(traits, by = "mouse_id")
+  # covariates
+    dat <- addcovar %>%
     as_tibble() %>%
-    mutate(mouse_id = names(geno)) %>%
-    (function(x){colnames(x)[1:36] <- colnames(geno[[1]]); return(x)}) %>%
-    inner_join(traits, by = "mouse_id")
-# covariates
-  dat <- addcovar %>%
-  as_tibble() %>%
-  mutate(mouse_id = rownames(addcovar)) %>%
-  inner_join(foo, by = "mouse_id")
-
-# define prior_d
-prior_d <- list(P = dat %>%
-                  dplyr::select(AA:GH) %>%
-                  as.matrix() %>%
-                  (function(x){rownames(x) <- dat$mouse_id; return(x)}),
-                A = mcv.data$prior.D$A, # Describes the mapping from full genoprobs to additive dosages
-                fixed.diplo = FALSE)
-yy <- dat %>%
-  dplyr::select(peaks$lodcolumn[peak_num]) %>%
-  as.matrix() # Order needs to match genoprobs
-
-## TIMBR call
-results[[peak_num]] <- TIMBR(y = yy,
-                   
-                   Z = cbind(1, as.numeric(dat$block2), as.numeric(dat$block3)), 
-                 prior.D = prior_d,
-                 prior.M = prior_M)
+    mutate(mouse_id = rownames(addcovar)) %>%
+    inner_join(foo, by = "mouse_id")
+  
+  # define prior_d
+  prior_d <- list(P = dat %>%
+                    dplyr::select(AA:GH) %>%
+                    as.matrix() %>%
+                    (function(x){rownames(x) <- dat$mouse_id; return(x)}),
+                  A = mcv.data$prior.D$A, # Describes the mapping from full genoprobs to additive dosages
+                  fixed.diplo = FALSE)
+  yy <- dat %>%
+    dplyr::select(peaks$lodcolumn[peak_num]) %>%
+    as.matrix() # Order needs to match genoprobs
+  
+  ## TIMBR call
+  results[[peak_num]] <- TIMBR(y = yy,
+                     
+                     Z = cbind(1, as.numeric(dat$block2), as.numeric(dat$block3)), 
+                   prior.D = prior_d,
+                   prior.M = prior_M)
 }
   saveRDS(results, "../data/timbr-clinical-results.rds")
 
@@ -111,3 +112,9 @@ for (i in seq_along(results)){
   TIMBR::TIMBR.plot.haplotypes(results[[i]])
 }
 ```
+
+```{r allele-number}
+results %>%
+  purrr::map(.f = function(res) hist(res$post.K, plot = TRUE))
+```
+
