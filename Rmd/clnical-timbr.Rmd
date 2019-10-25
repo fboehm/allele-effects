@@ -41,28 +41,33 @@ prior_M <- list(model.type = "crp", # crp - Chinese Restaurant Process
 
 ```{r load-covariates}
 load("../data/reduced_map_qtl2_mapping_objects.Rdata")
-dat <- addcovar %>%
-  as_tibble() %>%
-  mutate(mouse_id = rownames(addcovar)) %>%
-  inner_join(foo, by = "mouse_id")
 ```
 
 
 ```{r timbr}
 data(mcv.data) # get A matrix
-# get genotypes
-foo <- peaks %>%
-  dplyr::select(probe) %>%
-  filter(probe == probe[peak_num]) %>%
-  purrr::map(.f = function(probe) {lapply(X = geno, FUN = function(gg) gg[rownames(gg) %in% probe, drop = FALSE])}
+results <- list()
+if (!file.exists("../data/timbr-clinical-results.rds")){
+  for (peak_num in seq_along(1:nrow(peaks))){
+  # get genotypes
+  foo <- peaks %>%
+    dplyr::select(probe) %>%
+    filter(probe == probe[peak_num]) %>%
+    purrr::map(.f = function(probe) {lapply(X = geno, FUN = function(gg) gg[rownames(gg) %in% probe, drop = FALSE])}
              ) %>%
-  bind_cols() %>%
-  as.matrix() %>%
-  t() %>%
+    bind_cols() %>%
+    as.matrix() %>%
+    t() %>%
+    as_tibble() %>%
+    mutate(mouse_id = names(geno)) %>%
+    (function(x){colnames(x)[1:36] <- colnames(geno[[1]]); return(x)}) %>%
+    inner_join(traits, by = "mouse_id")
+# covariates
+  dat <- addcovar %>%
   as_tibble() %>%
-  mutate(mouse_id = names(geno)) %>%
-  (function(x){colnames(x)[1:36] <- colnames(geno[[1]]); return(x)}) %>%
-  inner_join(traits, by = "mouse_id")
+  mutate(mouse_id = rownames(addcovar)) %>%
+  inner_join(foo, by = "mouse_id")
+
 # define prior_d
 prior_d <- list(P = dat %>%
                   dplyr::select(AA:GH) %>%
@@ -70,14 +75,39 @@ prior_d <- list(P = dat %>%
                   (function(x){rownames(x) <- dat$mouse_id; return(x)}),
                 A = mcv.data$prior.D$A, # Describes the mapping from full genoprobs to additive dosages
                 fixed.diplo = FALSE)
+yy <- dat %>%
+  dplyr::select(peaks$lodcolumn[peak_num]) %>%
+  as.matrix() # Order needs to match genoprobs
 
 ## TIMBR call
-results <- TIMBR(y = foo %>%
-                   dplyr::select(peaks$lodcolumn[peak_num]), # Order needs to match genoprobs
-                 Z = cbind(rep(1, n), ),
+results[[peak_num]] <- TIMBR(y = yy,
+                   
+                   Z = cbind(1, as.numeric(dat$block2), as.numeric(dat$block3)), 
                  prior.D = prior_d,
                  prior.M = prior_M)
+}
+  saveRDS(results, "../data/timbr-clinical-results.rds")
+
+} else {
+  results <- readRDS("../data/timbr-clinical-results.rds")
+}
 
 ```
 
 
+
+
+```{r plot-pdf, eval = FALSE}
+for (i in seq_along(results)){
+  fn <- paste0("../figures/timbr-", peaks$lodcolumn[i], "-Chr", peaks$chr, "-", peaks$Mb, "Mb.pdf")
+  pdf(fn)
+  TIMBR::TIMBR.plot.haplotypes(results[[i]])
+  dev.off()
+}
+```
+
+```{r plot}
+for (i in seq_along(results)){
+  TIMBR::TIMBR.plot.haplotypes(results[[i]])
+}
+```
