@@ -1,0 +1,16 @@
+Package: qtl2effects
+Title: Tools for Allele Effects at Established Quantitative
+    Trait Loci
+Version: 0.0.0.9000
+Authors@R: 
+    person(given = "Frederick J.",
+           family = "Boehm",
+           role = c("aut", "cre"),
+           email = "frederick.boehm@gmail.com",
+           comment = c(ORCID = "0000-0002-1644-5931"))
+Description: What the package does (one paragraph).
+License: MIT + file LICENSE
+Suggests: 
+    testthat
+Encoding: UTF-8
+LazyData: true
