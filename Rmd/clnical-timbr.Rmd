@@ -118,3 +118,36 @@ results %>%
   purrr::map(.f = function(res) hist(res$post.K, plot = TRUE))
 ```
 
+
+## Summarizing allele partitioning
+
+We want to partition the eight founder alleles at each QTL. We'll then "collapse" genotypes and redo the scan (over the QTL instead of genome-wide).
+
+```{r tabulate-results}
+r1 <- results[[1]]
+tibble(partition = names(table(r1$post.M)), count = table(r1$post.M)) %>%
+  arrange(desc(count))
+```
+
+## Collapse genotype probabilities
+
+```{r}
+#' @param 
+allele_map_vec_to_matrix <- function(allele_map){
+  mat <- matrix(data = NA, nrow = length(allele_map), ncol = length(unique(allele_map)))
+  for (i in 1:ncol(mat)){
+    mat[ , i] <- as.numeric(allele_map == i)
+  }
+  return(mat)
+}
+
+
+
+#' @param probs a genotype probabilities array (typically for one chromosome)
+#' @param allele_map a numeric vector of integers mapping the founder alleles to QTL alleles
+collapse_geno <- function(probs, allele_map){
+  map_matrix <- allele_map_vec_to_matrix(allele_map)
+  apply(X = probs, FUN = function(x) x %*% map_matrix, MARGIN = 2)
+}
+```
+

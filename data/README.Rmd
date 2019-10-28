@@ -1,0 +1,17 @@
+---
+title: "README"
+author: "Frederick J. Boehm"
+date: "10/24/2019"
+output: github_document
+---
+
+
+
+Data are downloaded from Dropbox on Oct 24, 2019:
+
+https://www.dropbox.com/sh/9vlwgt673vj36aw/AAAskIrEMErQrWDANPZrSxO2a?dl=0
+
+`timbr-clinical-results.rds` was created with code in `Rmd/clinical-timbr.Rmd`.
+
+Rick Baker emailed me the two csv files on Oct 23, 2019.
+
