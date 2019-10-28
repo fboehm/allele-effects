@@ -4,3 +4,6 @@ data
 Rscript
 Rmd
 ^\.github$
+^\.travis\.yml$
+^codecov\.yml$
+^\.covrignore$
