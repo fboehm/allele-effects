@@ -129,25 +129,103 @@ tibble(partition = names(table(r1$post.M)), count = table(r1$post.M)) %>%
   arrange(desc(count))
 ```
 
-## Collapse genotype probabilities
+## Collapse genotype probabilities for first QTL (IL9 on Chr2)
 
-```{r}
-#' @param 
-allele_map_vec_to_matrix <- function(allele_map){
-  mat <- matrix(data = NA, nrow = length(allele_map), ncol = length(unique(allele_map)))
-  for (i in 1:ncol(mat)){
-    mat[ , i] <- as.numeric(allele_map == i)
-  }
-  return(mat)
-}
+```{r collapse}
+gg <- qtl2effects::collapse_geno(genoprobs.1$`2`, c(rep(0, 5), 1, 0, 0))
+dimnames(gg)[[2]] <- as.character(0:1)
+```
 
+```{r scan1}
+trait_name <- "IL9"
+trait <- traits %>%
+  select(IL9) %>%
+  as.matrix() %>%
+  (function(x) {rownames(x) <- traits$mouse_id; colnames(x) <- trait_name; return(x)})
+s1_out_collapsed <- numeric(length = dim(gg)[3])
+s1_out <- numeric(length = dim(gg)[3])
 
-
-#' @param probs a genotype probabilities array (typically for one chromosome)
-#' @param allele_map a numeric vector of integers mapping the founder alleles to QTL alleles
-collapse_geno <- function(probs, allele_map){
-  map_matrix <- allele_map_vec_to_matrix(allele_map)
-  apply(X = probs, FUN = function(x) x %*% map_matrix, MARGIN = 2)
+for (i in seq_along(1:dim(gg)[3])){
+  s1_out_collapsed[i] <- qtl2::fit1(genoprobs = gg[ , , i], 
+            pheno = trait, 
+            addcovar = addcovar 
+            )$lod
+s1_out[i] <- qtl2::fit1(genoprobs = genoprobs.1$`2`[ , , i], 
+            pheno = trait, 
+            addcovar = addcovar 
+            )$lod
+  
 }
 ```
+
+## Apply to all elements of `results` list
+
+```{r, scan1_loop}
+lods <- list()
+for (i in seq_along(1:length(results))){
+  r1 <- results[[i]]
+  tib <- tibble(partition = names(table(r1$post.M)), 
+         count = table(r1$post.M)) %>%
+    arrange(desc(count))
+  part <- tib$partition[1] %>% # choose the top row in tib
+    stringr::str_split(pattern = ",") %>%
+    unlist() %>%
+    as.numeric()
+  gg <- qtl2effects::collapse_geno(genoprobs.1[[peaks$chr[i]]], part)
+  dimnames(gg)[[2]] <- as.character(0:max(part))
+  ## make trait
+  trait_name <- peaks$lodcolumn[i]
+  trait <- traits %>%
+    select(trait_name) %>%
+    as.matrix() %>%
+    (function(x) {rownames(x) <- traits$mouse_id; 
+    colnames(x) <- trait_name; 
+    return(x)}
+    )
+  
+  s1_out_collapsed <- numeric(length = dim(gg)[3])
+  s1_out <- numeric(length = dim(gg)[3])
+  qtl2::scan1()
+  
+  
+  for (j in seq_along(1:dim(gg)[3])){
+    s1_out_collapsed[j] <- qtl2::fit1(genoprobs = gg[ , , j], 
+              pheno = trait, 
+              addcovar = addcovar 
+              )$lod
+  s1_out[j] <- qtl2::fit1(genoprobs = genoprobs.1[[peaks$chr[i]]][ , , j], 
+              pheno = trait, 
+              addcovar = addcovar 
+              )$lod
+  }
+  lods[[i]] <- tibble(collapsed_lod = s1_out_collapsed, lod = s1_out)
+}
+
+```
+
+```{r, find_peaks}
+sapply(X = lods, FUN = function(x) tibble(max_collapsed_lod = max(x$collapsed_lod),
+                                max_lod = max(x$lod)))
+```
+
+
+```{r, perms}
+# prep pheno
+traits_matrix <- traits %>%
+  dplyr::select(- mouse_id) %>%
+  as.matrix() %>%
+  (function(x){
+    rownames(x) <- traits$mouse_id
+    return(x)
+  })
+gg_named <- list() 
+gg_named$`18` <- gg
+qtl2::scan1perm(gg_named, 
+                pheno = traits_matrix, 
+                addcovar = addcovar, 
+                n_perm = 10000
+                )
+```
+
+
 
