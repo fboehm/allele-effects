@@ -129,43 +129,19 @@ tibble(partition = names(table(r1$post.M)), count = table(r1$post.M)) %>%
   arrange(desc(count))
 ```
 
-## Collapse genotype probabilities for first QTL (IL9 on Chr2)
 
-```{r collapse}
-gg <- qtl2effects::collapse_geno(genoprobs.1$`2`, c(rep(0, 5), 1, 0, 0))
-dimnames(gg)[[2]] <- as.character(0:1)
-```
-
-```{r scan1}
-trait_name <- "IL9"
-trait <- traits %>%
-  select(IL9) %>%
-  as.matrix() %>%
-  (function(x) {rownames(x) <- traits$mouse_id; colnames(x) <- trait_name; return(x)})
-s1_out_collapsed <- numeric(length = dim(gg)[3])
-s1_out <- numeric(length = dim(gg)[3])
-
-for (i in seq_along(1:dim(gg)[3])){
-  s1_out_collapsed[i] <- qtl2::fit1(genoprobs = gg[ , , i], 
-            pheno = trait, 
-            addcovar = addcovar 
-            )$lod
-s1_out[i] <- qtl2::fit1(genoprobs = genoprobs.1$`2`[ , , i], 
-            pheno = trait, 
-            addcovar = addcovar 
-            )$lod
-  
-}
-```
 
 ## Apply to all elements of `results` list
 
 ```{r, scan1_loop}
-lods <- list()
+s1perm <- list()
+s1perm_collapsed <- list()
+s1_collapsed <- list()
+s1 <- list()
 for (i in seq_along(1:length(results))){
   r1 <- results[[i]]
-  tib <- tibble(partition = names(table(r1$post.M)), 
-         count = table(r1$post.M)) %>%
+  tib <- tibble(partition = names(table(r1$post.M)),
+                count = table(r1$post.M)) %>%
     arrange(desc(count))
   part <- tib$partition[1] %>% # choose the top row in tib
     stringr::str_split(pattern = ",") %>%
@@ -173,6 +149,10 @@ for (i in seq_along(1:length(results))){
     as.numeric()
   gg <- qtl2effects::collapse_geno(genoprobs.1[[peaks$chr[i]]], part)
   dimnames(gg)[[2]] <- as.character(0:max(part))
+  dimnames(gg)[[3]] <- names(map.1[[peaks$chr[i]]])
+  gg_named <- list()
+  gg_named$`1` <- gg
+  attributes(gg_named)$class <- c("calc_genoprob", "list")
   ## make trait
   trait_name <- peaks$lodcolumn[i]
   trait <- traits %>%
@@ -182,50 +162,41 @@ for (i in seq_along(1:length(results))){
     colnames(x) <- trait_name; 
     return(x)}
     )
-  
-  s1_out_collapsed <- numeric(length = dim(gg)[3])
-  s1_out <- numeric(length = dim(gg)[3])
-  qtl2::scan1()
-  
-  
-  for (j in seq_along(1:dim(gg)[3])){
-    s1_out_collapsed[j] <- qtl2::fit1(genoprobs = gg[ , , j], 
+  ## scan1 calls
+  s1_collapsed[[i]] <- qtl2::scan1(genoprobs = gg_named, 
               pheno = trait, 
-              addcovar = addcovar 
-              )$lod
-  s1_out[j] <- qtl2::fit1(genoprobs = genoprobs.1[[peaks$chr[i]]][ , , j], 
+              addcovar = addcovar
+              )
+  gg_full <- list()
+  gg_full$`1` <- genoprobs.1[[peaks$chr[i]]]
+  attributes(gg_full)$class <- c("calc_genoprob", "list")
+  s1[[i]] <- qtl2::scan1(genoprobs = gg_full, 
               pheno = trait, 
-              addcovar = addcovar 
-              )$lod
-  }
-  lods[[i]] <- tibble(collapsed_lod = s1_out_collapsed, lod = s1_out)
+              addcovar = addcovar
+              )
+  ## scan1perm calls
+  s1perm_collapsed[[i]] <- qtl2::scan1perm(genoprobs = gg_named, 
+              pheno = trait, 
+              addcovar = addcovar, 
+              n_perm = 10000
+              )
+  #s1perm[[i]] <- qtl2::scan1perm(genoprobs = genoprobs.1[[peaks$chr[i]]], 
+  #            pheno = trait, 
+  #            addcovar = addcovar, 
+  #            n_perm = 10000
+  #            )
 }
 
 ```
 
-```{r, find_peaks}
-sapply(X = lods, FUN = function(x) tibble(max_collapsed_lod = max(x$collapsed_lod),
-                                max_lod = max(x$lod)))
+## Calculate quantiles for each set of permutations
+
+```{r get-quantiles}
+(qmat <- sapply(X = s1perm_collapsed, FUN = quantile, probs = c(0.95, 0.99, 0.999, 0.9999)))
 ```
 
-
-```{r, perms}
-# prep pheno
-traits_matrix <- traits %>%
-  dplyr::select(- mouse_id) %>%
-  as.matrix() %>%
-  (function(x){
-    rownames(x) <- traits$mouse_id
-    return(x)
-  })
-gg_named <- list() 
-gg_named$`18` <- gg
-qtl2::scan1perm(gg_named, 
-                pheno = traits_matrix, 
-                addcovar = addcovar, 
-                n_perm = 10000
-                )
+```{r collapsed-lods}
+tibble(trait = names(sapply(X = s1_collapsed, FUN = max)), 
+       collapsed_lod = sapply(X = s1_collapsed, FUN = max)) %>%
+  bind_cols(as_tibble(t(qmat)))
 ```
-
-
-
