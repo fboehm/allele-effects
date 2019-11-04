@@ -18,14 +18,14 @@ LazyData: true
 Depends: 
     R (>= 3.2)
 RoxygenNote: 6.1.1
-Imports: 
+Suggests: 
     dplyr,
     tidyr,
-    readr,
+    readr
+Imports: 
     magrittr,
     stringr,
     parallel,
-    TIMBR,
-    rmarkdown
+    TIMBR
 Remotes: 
     wesleycrouse/TIMBR
