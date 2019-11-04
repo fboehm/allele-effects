@@ -7,3 +7,5 @@ Rmd
 ^\.travis\.yml$
 ^codecov\.yml$
 ^\.covrignore$
+^.*\.Rproj$
+^\.Rproj\.user$

@@ -1,0 +1,108 @@
+---
+title: "TnSeq traits TIMBR analysis"
+author: "Frederick J. Boehm"
+date: "11/4/2019"
+output: html_document
+---
+
+```{r}
+library(tidyverse)
+library(TIMBR)
+```
+
+```{r read-csv}
+(tt <- readr::read_csv("../data/neto_traits_by_probe3_annotated.csv"))
+neto <- tt %>%
+  tidyr::pivot_longer(cols = V2:V35, values_to = "trait", names_to = "trait_name") %>%
+  dplyr::filter(!is.na(trait)) %>%
+  dplyr::select(- trait_name, - neto.n, - row, - n.traits, - cM) %>%
+```
+
+```{r load-genotypes}
+fns <- dir("../data/36-state-genotypes")
+geno <- list()
+for (i in seq_along(fns)){
+  load(file.path("../data/36-state-genotypes", fns[i]))
+  geno[[i]] <- prsmth
+}
+names(geno) <- stringr::str_split_fixed(fns, ".genotype.probs.Rdata", 2)[, 1]
+```
+
+```{r prior_M-define}
+##### From GK example code
+# Specify allelic series prior
+# Suggested by Wes
+# Influences how much prior weight it places on more or less complicated allelic series
+prior_M <- list(model.type = "crp", # crp - Chinese Restaurant Process
+                prior.alpha.type = "gamma",
+                prior.alpha.shape = 1,
+                prior.alpha.rate = 2.333415)
+```
+
+```{r load-hot}
+if (!file.exists("../data/tnseq-traits.rds")) {
+  load("../data/combined_hotspot_traits.Rdata")
+  saveRDS(pheno, "../data/tnseq-traits.rds")
+  pheno -> tnseq_traits
+} else {
+  tnseq_traits <- readRDS("../data/tnseq-traits.rds")
+}
+```
+
+
+```{r load-covariates}
+load("../data/reduced_map_qtl2_mapping_objects.Rdata")
+```
+
+
+```{r timbr}
+data(mcv.data) # get A matrix
+results <- list()
+if (!file.exists("../data/timbr-tnseq-results.rds")){
+  
+    # get genotypes
+    foo <- peaks %>%
+      dplyr::select(probe) %>%
+      filter(probe == probe[peak_num]) %>%
+      purrr::map(.f = function(probe) {lapply(X = geno, FUN = function(gg) gg[rownames(gg) %in% probe, drop = FALSE])}
+               ) %>%
+      bind_cols() %>%
+      as.matrix() %>%
+      t() %>%
+      as.data.frame() %>%
+      as_tibble() %>%
+      mutate(mouse_id = names(geno)) %>%
+      (function(x){colnames(x)[1:36] <- colnames(geno[[1]]); return(x)}) %>%
+      inner_join(traits, by = "mouse_id")
+  # covariates
+    dat <- addcovar %>%
+    as_tibble() %>%
+    mutate(mouse_id = rownames(addcovar)) %>%
+    inner_join(foo, by = "mouse_id")
+  
+  # define prior_d
+  prior_d <- list(P = dat %>%
+                    dplyr::select(AA:GH) %>%
+                    as.matrix() %>%
+                    (function(x){rownames(x) <- dat$mouse_id; return(x)}),
+                  A = mcv.data$prior.D$A, # Describes the mapping from full genoprobs to additive dosages
+                  fixed.diplo = FALSE)
+  yy <- dat %>%
+    dplyr::select(peaks$lodcolumn[peak_num]) %>%
+    as.matrix() # Order needs to match genoprobs
+  
+  ## TIMBR call
+  results[[peak_num]] <- TIMBR(y = yy, 
+                               Z = cbind(1, 
+                                         as.numeric(dat$block2),
+                                         as.numeric(dat$block3)), 
+                               prior.D = prior_d,
+                               prior.M = prior_M)
+  saveRDS(results, "../data/timbr-tnseq-results.rds")
+} else {
+  results <- readRDS("../data/timbr-tnseq-results.rds")
+}
+```
+
+
+
