@@ -12,16 +12,15 @@ Description: What the package does (one paragraph).
 License: MIT + file LICENSE
 Suggests: 
     testthat,
+    dplyr,
+    tidyr,
+    readr,
     covr
 Encoding: UTF-8
 LazyData: true
 Depends: 
     R (>= 3.2)
 RoxygenNote: 6.1.1
-Suggests: 
-    dplyr,
-    tidyr,
-    readr
 Imports: 
     magrittr,
     stringr,
