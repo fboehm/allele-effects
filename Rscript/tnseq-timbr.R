@@ -3,7 +3,7 @@ library(TIMBR)
 
 
 ## ----read-csv------------------------------------------------------------
-(tt <- readr::read_csv("../data/neto_traits_by_probe3_annotated.csv"))
+(tt <- read.csv("../data/neto_traits_by_probe3_annotated.csv"))
 neto <- tt %>%
   tidyr::pivot_longer(cols = V2:V35, values_to = "trait", names_to = "trait_name") %>%
   dplyr::filter(!is.na(trait)) %>%
