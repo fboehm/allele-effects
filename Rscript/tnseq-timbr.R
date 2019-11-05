@@ -70,7 +70,7 @@ if (!file.exists(outfn)){
                                   prior_M = prior_M, 
                                   genoprobs = geno
                                   )
-  save(timbr_out, outfn)
+  saveRDS(timbr_out, outfn)
 }
 
 
