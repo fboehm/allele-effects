@@ -65,14 +65,14 @@ neto_small <- neto_list[1:3]
 
 
 ```{r }
-outfn <- "../data/timbr-tnseq-results.rds"
+outfn <- "../data/timbr-tnseq-results-neto-all.rds"
 # ensure that inputs to call_timbr all have subjects in same order!
 subject_ids <- rownames(tnseq_traits)
 indices_addcovar <- match(subject_ids, rownames(addcovar))
 addcovar <- addcovar[indices_addcovar, ]
 ##
 if (!file.exists(outfn)){
-  timbr_out <- parallel::mclapply(neto_small, 
+  timbr_out <- parallel::mclapply(neto_list, 
                                   FUN = qtl2effects::call_timbr, 
                                   mc.cores = parallel::detectCores(),
                                   traits_df = tnseq_traits,
