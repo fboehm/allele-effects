@@ -12,7 +12,7 @@ Last modified: `r params$lastmod`.
 
 ```{r}
 library(TIMBR)
-library(tidyverse)
+library(dplyr)
 ```
 
 ```{r read-csv}
