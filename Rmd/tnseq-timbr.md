@@ -3,39 +3,26 @@ TnSeq traits TIMBR analysis
 Frederick J. Boehm
 11/4/2019
 
+Last modified: 2019-11-05 21:02:00.
+
 ``` r
 library(TIMBR)
-library(tidyverse)
+library(dplyr)
 ```
 
-    ## ── Attaching packages ───────────────────────────────────────────────────────────────── tidyverse 1.2.1 ──
+    ## 
+    ## Attaching package: 'dplyr'
 
-    ## ✔ ggplot2 3.2.1     ✔ purrr   0.3.3
-    ## ✔ tibble  2.1.3     ✔ dplyr   0.8.3
-    ## ✔ tidyr   1.0.0     ✔ stringr 1.4.0
-    ## ✔ readr   1.3.1     ✔ forcats 0.4.0
+    ## The following objects are masked from 'package:stats':
+    ## 
+    ##     filter, lag
 
-    ## ── Conflicts ──────────────────────────────────────────────────────────────────── tidyverse_conflicts() ──
-    ## ✖ dplyr::filter() masks stats::filter()
-    ## ✖ dplyr::lag()    masks stats::lag()
-
-``` r
-tt <- readr::read_csv("../data/neto_traits_by_probe3_annotated.csv")
-```
-
-    ## Parsed with column specification:
-    ## cols(
-    ##   .default = col_character(),
-    ##   hs = col_double(),
-    ##   cM = col_double(),
-    ##   neto.n = col_double(),
-    ##   row = col_double(),
-    ##   n.traits = col_double()
-    ## )
-
-    ## See spec(...) for full column specifications.
+    ## The following objects are masked from 'package:base':
+    ## 
+    ##     intersect, setdiff, setequal, union
 
 ``` r
+tt <- read.csv("../data/neto_traits_by_probe3_annotated.csv")
 neto <- tt %>%
   tidyr::pivot_longer(cols = V2:V35, values_to = "trait", names_to = "trait_name") %>%
   dplyr::filter(!is.na(trait)) %>%
@@ -43,15 +30,19 @@ neto <- tt %>%
 ```
 
 ``` r
-fns <- dir("../data/36-state-genotypes")
-geno <- list()
-for (i in seq_along(fns)){
-  load(file.path("../data/36-state-genotypes", fns[i]))
-  geno[[i]] <- prsmth
+if (!file.exists("../data/genotypes_array.rds")){
+  fns <- dir("../data/36-state-genotypes")
+  geno <- list()
+  for (i in seq_along(fns)){
+    load(file.path("../data/36-state-genotypes", fns[i]))
+    geno[[i]] <- prsmth
+  }
+  names(geno) <- stringr::str_split_fixed(fns, ".genotype.probs.Rdata", 2)[, 1]
+  g_transposed <- lapply(X = geno, FUN = t)
+  ga <- do.call(abind::abind,c(g_transposed,list(along=0))) # 
+  saveRDS(ga, "../data/genotypes_array.rds")
 }
-names(geno) <- stringr::str_split_fixed(fns, ".genotype.probs.Rdata", 2)[, 1]
-g_transposed <- lapply(X = geno, FUN = t)
-ga <- do.call(abind::abind,c(g_transposed,list(along=0))) # 
+ga <- readRDS("../data/genotypes_array.rds")
 ```
 
 ``` r
@@ -89,7 +80,7 @@ neto_small <- neto_list[1:3]
 ```
 
 ``` r
-outfn <- "../data/timbr-tnseq-results-neto-small.rds"
+outfn <- "../data/timbr-tnseq-results-neto.rds"
 # ensure that inputs to call_timbr all have subjects in same order!
 subject_ids <- rownames(tnseq_traits)
 indices_addcovar <- match(subject_ids, rownames(addcovar))
@@ -99,7 +90,8 @@ indices_gp <- match(subject_ids, rownames(ga))
 gp <- ga[indices_gp, , ]
 ##
 if (!file.exists(outfn)){
-  timbr_out <- parallel::mclapply(neto_small, 
+  timbr_out <- parallel::mclapply(neto_list, 
+#  timbr_out <- lapply(neto_small, 
                                   FUN = qtl2effects::call_timbr, 
                                   mc.cores = parallel::detectCores(),
                                   traits_df = tnseq_traits,
