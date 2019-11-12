@@ -10,12 +10,13 @@ output: html_document
 outfn <- "../data/timbr-tnseq-results-neto.rds"
 timbr_out <- readRDS(outfn)
 hot_indices <- readr::read_csv("../data/hot-annots.csv")
-purrr::pmap(.l = hot_indices, 
-            .f = function(x){
-              outfn = paste0( "../data/timbr-tnseq-results-neto-hs", hs, ".rds")
-              saveRDS(timbr_out[start:end], outfn)
-              }
-            )
 ```
 
+```{r split-up-list}
+for (i in 1:nrow(hot_indices)){
+  foo <- timbr_out[hot_indices$start:hot_indices$end]
+  fn <- paste0("../data/timbr-tnseq-results-neto-hs", i, ".rds")
+  saveRDS(foo, fn)
+}
+```
 
