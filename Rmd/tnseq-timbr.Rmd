@@ -104,7 +104,7 @@ if (!file.exists(outfn)){
 }
 ```
 
-```{r read_timbr_results, eval = FALSE}
+```{r read_timbr_results, eval = TRUE}
 timbr_out <- readRDS(outfn)
 ```
 
