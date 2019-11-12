@@ -9,6 +9,9 @@ output: html_document
 ```{r }
 outfn <- "../data/timbr-tnseq-results-neto.rds"
 timbr_out <- readRDS(outfn)
+```
+
+```{r readcsv}
 hot_indices <- readr::read_csv("../data/hot-annots.csv")
 ```
 
