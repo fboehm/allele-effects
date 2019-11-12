@@ -21,6 +21,10 @@ neto <- tt %>%
   tidyr::pivot_longer(cols = V2:V35, values_to = "trait", names_to = "trait_name") %>%
   dplyr::filter(!is.na(trait)) %>%
   dplyr::select(- trait_name, - neto.n, - row, - n.traits, - cM, -hs, - chr)
+neto_plus <- tt %>%
+  tidyr::pivot_longer(cols = V2:V35, values_to = "trait", names_to = "trait_name") %>%
+  dplyr::filter(!is.na(trait)) %>%
+  dplyr::select(- trait_name)
 ```
 
 ```{r load-genotypes}
@@ -102,5 +106,27 @@ if (!file.exists(outfn)){
 
 ```{r read_timbr_results}
 timbr_out <- readRDS(outfn)
+```
+
+
+
+We need to break up the timbr_out object into 1 list per hotspot, then save each list as a separate rds file. This is because the file size is too big otherwise.
+
+```{r, annotation-tibble}
+(hot_indices <- neto_plus %>%
+  dplyr::group_by(hs) %>%
+  dplyr::tally() %>%
+  dplyr::mutate(end = cumsum(n)) %>%
+  dplyr::mutate(start = 1L + end - n)
+)
+```
+
+```{r save-files}
+purrr::pmap(.l = hot_indices, 
+            .f = function(x){
+              outfn = paste0( "../data/timbr-tnseq-results-neto-hs", hs, ".rds")
+              saveRDS(timbr_out[start:end], outfn)
+              }
+            )
 ```
 
