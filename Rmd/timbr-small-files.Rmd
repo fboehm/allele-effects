@@ -1,0 +1,21 @@
+---
+title: "Make smaller files from output"
+author: "Frederick J. Boehm"
+date: "11/12/2019"
+output: html_document
+---
+
+
+```{r }
+outfn <- "../data/timbr-tnseq-results-neto.rds"
+timbr_out <- readRDS(outfn)
+hot_indices <- readr::read_csv("../data/hot-annots.csv")
+purrr::pmap(.l = hot_indices, 
+            .f = function(x){
+              outfn = paste0( "../data/timbr-tnseq-results-neto-hs", hs, ".rds")
+              saveRDS(timbr_out[start:end], outfn)
+              }
+            )
+```
+
+
