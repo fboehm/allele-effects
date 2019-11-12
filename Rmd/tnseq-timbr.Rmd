@@ -123,9 +123,9 @@ We need to break up the timbr_out object into 1 list per hotspot, then save each
 
 ```{r save-files}
 for (i in 1:nrow(hot_indices)){
-  foo <- timbr_out[hot_indices$start:hot_indices$end]
+  bar <- foo[hot_indices$start[i]:hot_indices$end[i]]
   fn <- paste0("../data/timbr-tnseq-results-neto-hs", i, ".rds")
-  saveRDS(foo, fn)
+  saveRDS(bar, fn)
 }
 ```
 
