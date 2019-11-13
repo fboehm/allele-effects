@@ -1,0 +1,64 @@
+
+```{r read-hot-{{hot}}}
+fn <- "../data/timbr-tnseq-results-neto-hs{{hot}}.rds"
+timbr_out <- readRDS(fn)
+```
+
+```{r plots-{{hot}}}
+par(mfrow=c(1,2))    # set the plotting area into a 1*2 array
+purrr::map(.x = timbr_out, .f = function(x){
+  hist(x$post.K)
+  TIMBR::TIMBR.plot.haplotypes(x)
+}
+  )
+```
+
+
+# Pull out the most probable allelic series for each TIMBR analysis
+
+We should add to our annotations table the LOD scores for every trait - marker pair.
+
+```{r tib-{{hot}}}
+t1 <- purrr::map(.x = timbr_out, 
+           .f = function(x){
+             foo <- x$p.M.given.y[1]
+             tibble::tibble(posterior_prob = foo, 
+                            allele_series = names(foo))
+             }
+           ) %>%
+  dplyr::bind_rows()
+```
+
+```{r fit1-call-{{hot}}}
+start <- hot_indices %>%
+  dplyr::filter(hs == {{hot}}) %>%
+  dplyr::select(start) %>%
+  unlist()
+stop <- hot_indices %>%
+  dplyr::filter(hs == {{hot}}) %>%
+  dplyr::select(end) %>%
+  unlist()
+
+neto_plus %>%
+  dplyr::filter(hs == {{hot}}) %>%
+  dplyr::select(probe, trait) %>%
+  purrr::pmap( 
+           .f = function(probe, trait){
+             pheno <- traits[ , colnames(traits) == trait, drop = FALSE]
+             geno <- probs[ , , dimnames(probs)[[3]] == probe]
+             qtl2::fit1(genoprobs = geno, 
+                        pheno = pheno, 
+                        addcovar = addcovar
+                        )
+           }
+             ) %>%
+  purrr::map(.f = function(x){
+    tibble::tibble(lod = x$lod)
+  }) %>%
+  bind_rows() %>%
+  dplyr::bind_cols(neto_plus[start:stop, ]) %>%
+  dplyr::select(- c(hs, n.traits, lod, neto.n, row), lod) %>%
+  dplyr::bind_cols(t1)
+```
+
+
