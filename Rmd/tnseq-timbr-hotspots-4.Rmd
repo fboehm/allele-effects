@@ -1,7 +1,7 @@
 ---
-title: "TIMBR: Allele effects in TnSeq Hotspots"
+title: "TIMBR: Allele effects in TnSeq Hotspots: One marker per trait"
 author: "Frederick J. Boehm"
-date: "11/13/2019"
+date: "11/15/2019"
 output: github_document
 params:
   lastmod: !r lubridate::now()
