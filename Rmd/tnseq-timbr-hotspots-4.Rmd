@@ -1,0 +1,85 @@
+---
+title: "TIMBR: Allele effects in TnSeq Hotspots"
+author: "Frederick J. Boehm"
+date: "11/13/2019"
+output: github_document
+params:
+  lastmod: !r lubridate::now()
+---
+
+Last modified: `r params$lastmod`.
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r pkgs}
+library(dplyr)
+```
+
+```{r which-hots}
+hots <- 4
+```
+
+
+```{r read-genotypes}
+probs <- readRDS("../data/genotypes_array.rds")
+```
+
+```{r read-csv}
+tt <- read.csv("../data/neto_traits_by_probe3_annotated.csv")
+neto <- tt %>%
+  tidyr::pivot_longer(cols = V2:V35, values_to = "trait", names_to = "trait_name") %>%
+  dplyr::filter(!is.na(trait)) %>%
+  dplyr::select(- trait_name, - neto.n, - row, - n.traits, - cM, -hs, - chr)
+neto_plus <- tt %>%
+  tidyr::pivot_longer(cols = V2:V35, values_to = "trait", names_to = "trait_name") %>%
+  dplyr::filter(!is.na(trait)) %>%
+  dplyr::select(- trait_name)
+```
+
+```{r, annotation-tibble}
+(hot_indices <- neto_plus %>%
+  dplyr::group_by(hs) %>%
+  dplyr::tally() %>%
+  dplyr::mutate(end = cumsum(n)) %>%
+  dplyr::mutate(start = 1L + end - n)
+)
+```
+
+```{r load-covariates}
+load("../data/reduced_map_qtl2_mapping_objects.Rdata")
+traits <- readRDS("../data/tnseq-traits.rds")
+```
+
+
+```{r knit_expand-call}
+out <- purrr::map(hots, .f = function(hot) knitr::knit_expand(text = readLines(here::here("Rmd", "tnseq-timbr-hotspots-small-one.Rmd"))))
+```
+
+`r knitr::knit(text = out[[1]])`
+
+
+`r knitr::knit(text = out[[2]])`
+
+
+`r knitr::knit(text = out[[3]])`
+
+
+`r knitr::knit(text = out[[4]])`
+
+
+`r knitr::knit(text = out[[5]])`
+
+`r knitr::knit(text = out[[6]])`
+
+`r knitr::knit(text = out[[7]])`
+
+
+`r knitr::knit(text = out[[8]])`
+
+
+`r knitr::knit(text = out[[9]])`
+
+`r knitr::knit(text = out[[10]])`
+
