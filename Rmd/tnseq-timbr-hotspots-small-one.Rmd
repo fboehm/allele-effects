@@ -1,3 +1,5 @@
+## Hotspot {{hot}}
+
 
 ```{r read-hot-{{hot}}}
 fn <- "../data/timbr-tnseq-results-neto-hs{{hot}}.rds"
