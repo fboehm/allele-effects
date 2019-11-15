@@ -1,5 +1,5 @@
 ---
-title: "Allele effects in TnSeq Hotspots 1, 2, 3, 5, 7, 10 (small hotspots)"
+title: "Allele effects in TnSeq Hotspots"
 author: "Frederick J. Boehm"
 date: "11/13/2019"
 output: github_document
