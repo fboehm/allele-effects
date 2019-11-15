@@ -1,0 +1,124 @@
+---
+title: "Clinical traits: rescans after genotype collapsing to CAST v not CAST"
+author: "Frederick J. Boehm"
+date: "11/14/2019"
+output: github_document
+params:
+  lastmod: !r lubridate::now()
+---
+
+## Goals
+
+The goal here is to rescan clinical traits after collapsing genotypes to CAST v not CAST.
+
+IL-9 has a peak that shows CAST v not CAST allele partitioning.
+
+We omit batch covariates because we work with batch-adjusted clinical traits.
+
+We treat mice from a single line as genetically identical.
+
+
+```{r}
+library(tidyverse)
+```
+
+```{r read-traits}
+traits <- readr::read_csv("../data/batch_corrected_phenos_individual_05OCT2019_v4.csv")
+
+```
+
+```{r load-genotypes}
+probs_line <- readRDS("../data/genotypes_array.rds")
+```
+
+We create a probs object that assumes that each mouse from a shared line is genetically identical.
+
+```{r per-mouse-genotypes}
+# first, how many mice per line are there??
+table(traits$CC.Line) -> tab
+(tib <- tibble::tibble(line = names(tab), count = tab))
+```
+
+```{r rownames}
+rn_pre <- purrr::map2(.x = tib$line, 
+                  .y = tib$count, 
+                  .f = function(x, y){rep(x, y)})
+rn <- rn_pre %>% unlist()
+```
+
+Now, make a 162 by 36 by n.markers array from the 60 by 36 by n.markers
+
+```{r make_probs_array}
+probs <- array(dim = c(162, 36, ))
+```
+
+
+## Apply to all elements of `results` list
+
+```{r, scan1_loop}
+s1perm <- list()
+s1perm_collapsed <- list()
+s1_collapsed <- list()
+s1 <- list()
+for (i in seq_along(1:length(results))){
+  r1 <- results[[i]]
+  tib <- tibble(partition = names(table(r1$post.M)),
+                count = table(r1$post.M)) %>%
+    arrange(desc(count))
+  part <- tib$partition[1] %>% # choose the top row in tib
+    stringr::str_split(pattern = ",") %>%
+    unlist() %>%
+    as.numeric()
+  gg <- qtl2effects::collapse_geno(genoprobs.1[[peaks$chr[i]]], part)
+  dimnames(gg)[[2]] <- as.character(0:max(part))
+  dimnames(gg)[[3]] <- names(map.1[[peaks$chr[i]]])
+  gg_named <- list()
+  gg_named$`1` <- gg
+  attributes(gg_named)$class <- c("calc_genoprob", "list")
+  ## make trait
+  trait_name <- peaks$lodcolumn[i]
+  trait <- traits %>%
+    select(trait_name) %>%
+    as.matrix() %>%
+    (function(x) {rownames(x) <- traits$mouse_id; 
+    colnames(x) <- trait_name; 
+    return(x)}
+    )
+  ## scan1 calls
+  s1_collapsed[[i]] <- qtl2::scan1(genoprobs = gg_named, 
+              pheno = trait, 
+              addcovar = addcovar
+              )
+  gg_full <- list()
+  gg_full$`1` <- genoprobs.1[[peaks$chr[i]]]
+  attributes(gg_full)$class <- c("calc_genoprob", "list")
+  s1[[i]] <- qtl2::scan1(genoprobs = gg_full, 
+              pheno = trait, 
+              addcovar = addcovar
+              )
+  ## scan1perm calls
+  s1perm_collapsed[[i]] <- qtl2::scan1perm(genoprobs = gg_named, 
+              pheno = trait, 
+              addcovar = addcovar, 
+              n_perm = 10000
+              )
+  #s1perm[[i]] <- qtl2::scan1perm(genoprobs = genoprobs.1[[peaks$chr[i]]], 
+  #            pheno = trait, 
+  #            addcovar = addcovar, 
+  #            n_perm = 10000
+  #            )
+}
+
+```
+
+## Calculate quantiles for each set of permutations
+
+```{r get-quantiles}
+(qmat <- sapply(X = s1perm_collapsed, FUN = quantile, probs = c(0.95, 0.99, 0.999, 0.9999)))
+```
+
+```{r collapsed-lods}
+tibble(trait = names(sapply(X = s1_collapsed, FUN = max)), 
+       collapsed_lod = sapply(X = s1_collapsed, FUN = max)) %>%
+  bind_cols(as_tibble(t(qmat)))
+```
