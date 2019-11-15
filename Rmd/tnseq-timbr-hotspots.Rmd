@@ -9,6 +9,13 @@ params:
 
 Last modified: `r params$lastmod`.
 
+
+## Overview
+
+We now consider only one marker per trait-hotspot pair. So, if a Neto trait appears at more than one hotspot, it will be present more than once below. However, if a trait is specific to a single hotspot, I consider it at only one marker, its LOD peak marker within the hotspot.
+
+
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
