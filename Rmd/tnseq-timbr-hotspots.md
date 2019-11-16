@@ -3,7 +3,7 @@ TIMBR: Allele effects in TnSeq Hotspots: One marker per trait
 Frederick J. Boehm
 11/15/2019
 
-Last modified: 2019-11-15 19:10:57.
+Last modified: 2019-11-15 19:37:48.
 
 ## Overview
 
@@ -29,7 +29,6 @@ library(dplyr)
 
 ``` r
 library(TIMBR)
-data(mcv.data)
 ```
 
 ``` r
@@ -138,8 +137,65 @@ if (!file.exists(outfn)){
                                 #  mc.cores = parallel::detectCores(),
                                   traits_df = traits,
                                   prior_M = prior_M, 
-                                  genoprobs_array = gp
+                                  genoprobs_array = gp,
+                                  addcovar = NULL
                                   )
   saveRDS(timbr_out, outfn)
 }
 ```
+
+    ## [1] "Sampling from the full posterior"
+    ## [1] 1000
+    ## [1] 2000
+    ## [1] 3000
+    ## [1] 4000
+    ## [1] 5000
+    ## [1] 6000
+    ## [1] 7000
+    ## [1] 8000
+    ## [1] 9000
+    ## [1] 10000
+    ## [1] "Sampling from the conditional posterior"
+    ## [1] 1000
+    ## [1] 2000
+    ## [1] 3000
+    ## [1] 4000
+    ## [1] 5000
+    ## [1] 6000
+    ## [1] 7000
+    ## [1] 8000
+    ## [1] 9000
+    ## [1] 10000
+    ## [1] "Sampling from the full posterior"
+    ## [1] 1000
+    ## [1] 2000
+    ## [1] 3000
+    ## [1] 4000
+    ## [1] 5000
+    ## [1] 6000
+    ## [1] 7000
+    ## [1] 8000
+    ## [1] 9000
+    ## [1] 10000
+    ## [1] "Sampling from the full posterior"
+    ## [1] 1000
+    ## [1] 2000
+    ## [1] 3000
+    ## [1] 4000
+    ## [1] 5000
+    ## [1] 6000
+    ## [1] 7000
+    ## [1] 8000
+    ## [1] 9000
+    ## [1] 10000
+    ## [1] "Sampling from the conditional posterior"
+    ## [1] 1000
+    ## [1] 2000
+    ## [1] 3000
+    ## [1] 4000
+    ## [1] 5000
+    ## [1] 6000
+    ## [1] 7000
+    ## [1] 8000
+    ## [1] 9000
+    ## [1] 10000

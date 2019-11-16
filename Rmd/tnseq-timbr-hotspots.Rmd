@@ -114,10 +114,10 @@ indices_gp <- match(subject_ids, rownames(probs))
 gp <- probs[indices_gp, , ]
 ##
 if (!file.exists(outfn)){
-  #timbr_out <- parallel::mclapply(neto_list, 
-  timbr_out <- lapply(neto_small, 
+  timbr_out <- parallel::mclapply(neto_list, 
+  #timbr_out <- lapply(neto_small, 
                                   FUN = qtl2effects::call_timbr, 
-                                #  mc.cores = parallel::detectCores(),
+                                  mc.cores = parallel::detectCores(),
                                   traits_df = traits,
                                   prior_M = prior_M, 
                                   genoprobs_array = gp,
