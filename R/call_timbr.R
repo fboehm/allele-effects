@@ -20,7 +20,7 @@ call_timbr <- function(input_vec,
                              A = A_matrix, # Describes the mapping from full genoprobs to additive dosages
                              fixed.diplo = FALSE)
   if (is.null(addcovar)){
-    Zmat <- matrix(rep(1, nrow(yy)), ncol = 1)
+    Zmat <- matrix(rep(1, nrow(gp)), ncol = 1)
   } else {
     Zmat <- as.matrix(cbind(1, addcovar))
   }
