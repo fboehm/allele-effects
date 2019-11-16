@@ -4,8 +4,8 @@
 \alias{call_timbr}
 \title{Call timbr for use on cluster}
 \usage{
-call_timbr(input_vec, traits_df, addcovar, prior_M, genoprobs_array,
-  A_matrix = mcv.data$prior.D$A)
+call_timbr(input_vec, traits_df, addcovar = NULL, prior_M,
+  genoprobs_array, A_matrix = mcv.data$prior.D$A)
 }
 \arguments{
 \item{input_vec}{a vector containing two named components, probe and trait}

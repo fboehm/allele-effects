@@ -10,7 +10,7 @@
 
 call_timbr <- function(input_vec, 
                        traits_df, 
-                       addcovar,
+                       addcovar = NULL,
                        prior_M, 
                        genoprobs_array, 
                        A_matrix = mcv.data$prior.D$A){
@@ -19,9 +19,13 @@ call_timbr <- function(input_vec,
   prior_d <- list(P = gp,
                              A = A_matrix, # Describes the mapping from full genoprobs to additive dosages
                              fixed.diplo = FALSE)
-  
+  if (is.null(addcovar)){
+    Zmat <- matrix(rep(1, ncol(yy)), ncol = 1)
+  } else {
+    Zmat <- as.matrix(cbind(1, addcovar))
+  }
   out <- TIMBR::TIMBR(y = yy,
-        Z = as.matrix(cbind(1, addcovar)), 
+        Z = Zmat, 
         prior.D = prior_d,
         prior.M = prior_M)
   return(out)

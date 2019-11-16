@@ -3,6 +3,7 @@ figures
 data
 Rscript
 Rmd
+shell
 ^\.github$
 ^\.travis\.yml$
 ^codecov\.yml$

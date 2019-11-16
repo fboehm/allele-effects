@@ -22,6 +22,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r pkgs}
 library(dplyr)
+library(TIMBR)
 ```
 
 ```{r which-hots}
@@ -31,6 +32,7 @@ hots <- 1:10
 
 ```{r read-genotypes}
 probs <- readRDS("../data/genotypes_array.rds")
+traits <- readRDS("../data/tnseq-traits.rds")
 ```
 
 ```{r read-csv}
@@ -43,6 +45,29 @@ neto_plus <- tt %>%
   tidyr::pivot_longer(cols = V2:V35, values_to = "trait", names_to = "trait_name") %>%
   dplyr::filter(!is.na(trait)) %>%
   dplyr::select(- trait_name)
+
+traits_timbr_annotated <- neto_plus %>%
+  dplyr::select(probe, trait) %>%
+  purrr::pmap( 
+           .f = function(probe, trait){
+             pheno <- traits[ , colnames(traits) == trait, drop = FALSE]
+             geno <- probs[ , , dimnames(probs)[[3]] == probe]
+             qtl2::fit1(genoprobs = geno, 
+                        pheno = pheno, 
+                        )
+           }
+             ) %>%
+  purrr::map(.f = function(x){
+    tibble::tibble(lod = x$lod)
+  }) %>%
+  bind_rows() %>%
+  bind_cols(neto_plus) %>%
+  dplyr::select(probe, trait, lod, hs) %>%
+  dplyr::group_by(hs) %>%
+  dplyr::group_by(trait) %>%
+  dplyr::filter(lod == max(lod)) %>%
+  dplyr::ungroup() %>%
+  dplyr::ungroup()
 ```
 
 ```{r, annotation-tibble}
@@ -54,39 +79,51 @@ neto_plus <- tt %>%
 )
 ```
 
-```{r load-covariates}
-load("../data/reduced_map_qtl2_mapping_objects.Rdata")
-traits <- readRDS("../data/tnseq-traits.rds")
+## TIMBR setup
+
+```{r prior_M-define}
+##### From GK example code
+# Specify allelic series prior
+# Suggested by Wes
+# Influences how much prior weight it places on more or less complicated allelic series
+prior_M <- list(model.type = "crp", # crp - Chinese Restaurant Process
+                prior.alpha.type = "gamma",
+                prior.alpha.shape = 1,
+                prior.alpha.rate = 2.333415)
 ```
 
 
-```{r knit_expand-call}
-out <- purrr::map(hots, .f = function(hot) knitr::knit_expand(text = readLines(here::here("Rmd", "tnseq-timbr-hotspots-small-one.Rmd"))))
+```{r load-data-timbr}
+data(mcv.data) # get A matrix
 ```
 
-`r knitr::knit(text = out[[1]])`
+```{r make_neto_list}
+tr_ann_sub <- traits_timbr_annotated %>%
+  dplyr::select(probe, trait)
+neto_list <- apply(FUN = as.list, X = tr_ann_sub, MARGIN = 1)
+neto_small <- neto_list[1:3]
+```
 
 
-`r knitr::knit(text = out[[2]])`
-
-
-`r knitr::knit(text = out[[3]])`
-
-
-`r knitr::knit(text = out[[4]])`
-
-
-`r knitr::knit(text = out[[5]])`
-
-`r knitr::knit(text = out[[6]])`
-
-`r knitr::knit(text = out[[7]])`
-
-
-`r knitr::knit(text = out[[8]])`
-
-
-`r knitr::knit(text = out[[9]])`
-
-`r knitr::knit(text = out[[10]])`
+```{r }
+outfn <- "../data/timbr-tnseq-neto-traits-one-marker-per-trait.rds"
+# ensure that inputs to call_timbr all have subjects in same order!
+subject_ids <- rownames(traits)
+##
+indices_gp <- match(subject_ids, rownames(probs))
+gp <- probs[indices_gp, , ]
+##
+if (!file.exists(outfn)){
+  #timbr_out <- parallel::mclapply(neto_list, 
+  timbr_out <- lapply(neto_small, 
+                                  FUN = qtl2effects::call_timbr, 
+                                #  mc.cores = parallel::detectCores(),
+                                  traits_df = traits,
+                                  prior_M = prior_M, 
+                                  genoprobs_array = gp,
+                                  addcovar = NULL
+                                  )
+  saveRDS(timbr_out, outfn)
+}
+```
 
