@@ -5,7 +5,7 @@ date: "11/15/2019"
 output: github_document
 params:
   lastmod: !r lubridate::now()
-  hot: 1
+  hot: 5
 ---
 
 Last modified: `r params$lastmod`.
