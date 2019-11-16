@@ -100,7 +100,7 @@ data(mcv.data) # get A matrix
 
 ```{r make_neto_list}
 tr_ann_sub <- traits_timbr_annotated %>%
-  dplyr::filter(hs == params$hot)
+  dplyr::filter(hs == params$hot) %>%
   dplyr::select(probe, trait)
 neto_list <- apply(FUN = as.list, X = tr_ann_sub, MARGIN = 1)
 neto_small <- neto_list[1:3]

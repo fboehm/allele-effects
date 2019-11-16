@@ -1,42 +1,46 @@
----
-title: "TIMBR: Allele effects in TnSeq Hotspots: One marker per trait"
-author: "Frederick J. Boehm"
-date: "11/15/2019"
-output: github_document
-params:
-  lastmod: !r lubridate::now()
-  hot: 7
----
+TIMBR: Allele effects in TnSeq Hotspots: One marker per trait
+================
+Frederick J. Boehm
+11/15/2019
 
-Last modified: `r params$lastmod`.
-
+Last modified: 2019-11-15 20:35:31.
 
 ## Overview
 
-We now consider only one marker per trait-hotspot pair. So, if a Neto trait appears at more than one hotspot, it will be present more than once below. However, if a trait is specific to a single hotspot, I consider it at only one marker, its LOD peak marker within the hotspot.
+We now consider only one marker per trait-hotspot pair. So, if a Neto
+trait appears at more than one hotspot, it will be present more than
+once below. However, if a trait is specific to a single hotspot, I
+consider it at only one marker, its LOD peak marker within the hotspot.
 
-
-
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+``` r
+library(dplyr)
 ```
 
-```{r pkgs}
-library(dplyr)
+    ## 
+    ## Attaching package: 'dplyr'
+
+    ## The following objects are masked from 'package:stats':
+    ## 
+    ##     filter, lag
+
+    ## The following objects are masked from 'package:base':
+    ## 
+    ##     intersect, setdiff, setequal, union
+
+``` r
 library(TIMBR)
 ```
 
-```{r which-hots}
+``` r
 hots <- 1:10
 ```
 
-
-```{r read-genotypes}
+``` r
 probs <- readRDS("../data/genotypes_array.rds")
 traits <- readRDS("../data/tnseq-traits.rds")
 ```
 
-```{r read-csv}
+``` r
 tt <- read.csv("../data/neto_traits_by_probe3_annotated.csv")
 neto <- tt %>%
   tidyr::pivot_longer(cols = V2:V35, values_to = "trait", names_to = "trait_name") %>%
@@ -71,18 +75,9 @@ traits_timbr_annotated <- neto_plus %>%
   dplyr::ungroup()
 ```
 
-```{r, annotation-tibble}
-(hot_indices <- neto_plus %>%
-  dplyr::group_by(hs) %>%
-  dplyr::tally() %>%
-  dplyr::mutate(end = cumsum(n)) %>%
-  dplyr::mutate(start = 1L + end - n)
-)
-```
-
 ## TIMBR setup
 
-```{r prior_M-define}
+``` r
 ##### From GK example code
 # Specify allelic series prior
 # Suggested by Wes
@@ -93,12 +88,11 @@ prior_M <- list(model.type = "crp", # crp - Chinese Restaurant Process
                 prior.alpha.rate = 2.333415)
 ```
 
-
-```{r load-data-timbr}
+``` r
 data(mcv.data) # get A matrix
 ```
 
-```{r make_neto_list}
+``` r
 tr_ann_sub <- traits_timbr_annotated %>%
   dplyr::filter(hs == params$hot) %>%
   dplyr::select(probe, trait)
@@ -106,8 +100,7 @@ neto_list <- apply(FUN = as.list, X = tr_ann_sub, MARGIN = 1)
 neto_small <- neto_list[1:3]
 ```
 
-
-```{r }
+``` r
 outfn <- paste0("../data/timbr-tnseq-neto-traits-one-marker-per-trait-", params$hot, ".rds")
 # ensure that inputs to call_timbr all have subjects in same order!
 subject_ids <- rownames(traits)
@@ -126,6 +119,51 @@ if (!file.exists(outfn)){
                                   addcovar = NULL
                                   )
   saveRDS(timbr_out, outfn)
+} else {
+  timbr_out <- readRDS(outfn)
 }
 ```
 
+``` r
+par(mfrow=c(1,2))    # set the plotting area into a 1*2 array
+purrr::map(.x = timbr_out, .f = function(x){
+  hist(x$post.K)
+  TIMBR::TIMBR.plot.haplotypes(x)
+}
+  )
+```
+
+![](tnseq-timbr-hotspot-1_files/figure-gfm/plots-1.png)<!-- -->![](tnseq-timbr-hotspot-1_files/figure-gfm/plots-2.png)<!-- -->![](tnseq-timbr-hotspot-1_files/figure-gfm/plots-3.png)<!-- -->
+
+    ## [[1]]
+    ## NULL
+    ## 
+    ## [[2]]
+    ## NULL
+    ## 
+    ## [[3]]
+    ## NULL
+
+# Pull out the most probable allelic series for each TIMBR analysis
+
+We should add to our annotations table the LOD scores for every trait -
+marker pair.
+
+``` r
+(t1 <- purrr::map(.x = timbr_out, 
+           .f = function(x){
+             foo <- x$p.M.given.y[1]
+             tibble::tibble(posterior_prob = foo, 
+                            allele_series = names(foo))
+             }
+           ) %>%
+  dplyr::bind_rows()
+)
+```
+
+    ## # A tibble: 3 x 2
+    ##   posterior_prob allele_series  
+    ##            <dbl> <chr>          
+    ## 1          0.149 0,0,1,0,1,1,0,1
+    ## 2          0.192 0,0,0,0,0,0,0,0
+    ## 3          0.281 0,1,1,0,0,0,0,1
