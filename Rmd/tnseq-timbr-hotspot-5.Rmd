@@ -108,7 +108,7 @@ neto_small <- neto_list[1:3]
 
 
 ```{r }
-outfn <- "../data/timbr-tnseq-neto-traits-one-marker-per-trait.rds"
+outfn <- paste0("../data/timbr-tnseq-neto-traits-one-marker-per-trait-", params$hot, ".rds")
 # ensure that inputs to call_timbr all have subjects in same order!
 subject_ids <- rownames(traits)
 ##
