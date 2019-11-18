@@ -3,6 +3,9 @@
 
 inferring founder allele effects at previously mapped QTL
 
+This is a collaborative project that involves Rick Baker, Clare Smith,
+me, and Chris Sassetti. My contribution is the TIMBR analyses.
+
 <!-- badges: start --> [![Travis build
 status](https://api.travis-ci.org/fboehm/qtl2effects.svg?branch=master)](https://api.travis-ci.org/fboehm/qtl2effects)
 [![Codecov test
