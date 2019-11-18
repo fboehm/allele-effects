@@ -1,0 +1,184 @@
+---
+title: "Neto hotspot 4 analysis per Rick's email"
+author: "Frederick J. Boehm"
+date: "11/18/2019"
+output: github_document
+params:
+  lastmod: !r lubridate::now()
+  hot: 4
+---
+
+Last modified: `r params$lastmod`.
+
+## Text of Rick's email on Nov 18, 2019
+
+> Sorry for the misunderstanding. I’m only interested in the hotspot4 traits identified in the analysis I sent on Friday afternoon (hotspots_allele_effects2.html). There are 11 traits. The trait/probe information was in my Email message, but I add it here again.  /rb
+
+> ## 4:Chr10.34 
+> ## RVBD_0158 :  JAX00302006 
+> ## RVBD_0437c :  JAX00301562 
+> ## RVBD_0490 :  UNC18950608 
+> ## RVBD_1051c :  UNC18908602 
+> ## RVBD_1493 :  UNC18891985 
+> ## RVBD_1692 :  UNC18962410 
+> ## RVBD_2643A :  UNC18925693 
+> ## RVBD_2854 :  JAX00300565 
+> ## RVBD_3261 :  UNCHS029542 
+> ## RVBD_3262 :  UNCHS029517 
+> ## RVBD_3452 :  JAX00302076
+
+
+
+## Analysis
+
+```{r pkgs}
+library(dplyr)
+library(TIMBR)
+```
+
+
+
+```{r read-genotypes}
+probs <- readRDS("../data/genotypes_array.rds")
+traits <- readRDS("../data/tnseq-traits.rds")
+```
+
+```{r read-csv}
+tt <- read.csv("../data/neto_traits_by_probe3_annotated.csv")
+neto <- tt %>%
+  tidyr::pivot_longer(cols = V2:V35, values_to = "trait", names_to = "trait_name") %>%
+  dplyr::filter(!is.na(trait)) %>%
+  dplyr::select(- trait_name, - neto.n, - row, - n.traits, - cM, -hs, - chr)
+neto_plus <- tt %>%
+  tidyr::pivot_longer(cols = V2:V35, values_to = "trait", names_to = "trait_name") %>%
+  dplyr::filter(!is.na(trait)) %>%
+  dplyr::select(- trait_name)
+
+traits_timbr_annotated <- neto_plus %>%
+  dplyr::select(probe, trait) %>%
+  purrr::pmap( 
+           .f = function(probe, trait){
+             pheno <- traits[ , colnames(traits) == trait, drop = FALSE]
+             geno <- probs[ , , dimnames(probs)[[3]] == probe]
+             qtl2::fit1(genoprobs = geno, 
+                        pheno = pheno, 
+                        )
+           }
+             ) %>%
+  purrr::map(.f = function(x){
+    tibble::tibble(lod = x$lod)
+  }) %>%
+  bind_rows() %>%
+  bind_cols(neto_plus) %>%
+  dplyr::select(probe, trait, lod, hs) %>%
+  dplyr::group_by(hs) %>%
+  dplyr::group_by(trait) %>%
+  dplyr::filter(lod == max(lod)) %>%
+  dplyr::ungroup() %>%
+  dplyr::ungroup()
+```
+
+```{r, annotation-tibble}
+(hot_indices <- neto_plus %>%
+  dplyr::group_by(hs) %>%
+  dplyr::tally() %>%
+  dplyr::mutate(end = cumsum(n)) %>%
+  dplyr::mutate(start = 1L + end - n)
+)
+```
+
+### TIMBR setup
+
+```{r prior_M-define}
+##### From GK example code
+# Specify allelic series prior
+# Suggested by Wes
+# Influences how much prior weight it places on more or less complicated allelic series
+prior_M <- list(model.type = "crp", # crp - Chinese Restaurant Process
+                prior.alpha.type = "gamma",
+                prior.alpha.shape = 1,
+                prior.alpha.rate = 2.333415)
+```
+
+
+```{r load-data-timbr}
+data(mcv.data) # get A matrix
+```
+
+```{r make_neto_list}
+neto_list <- tibble(probe = c("JAX00302006",
+                    "JAX00301562", 
+                    "UNC18950608", 
+                    "UNC18908602",
+                    "UNC18891985",
+                    "UNC18962410",
+                    "UNC18925693", 
+                    "JAX00300565", 
+                    "UNCHS029542",
+                    "UNCHS029517", 
+                    "JAX00302076"),
+                    trait = c("RVBD_0158",
+                              "RVBD_0437c", 
+                              "RVBD_0490", 
+                              "RVBD_1051c", 
+                              "RVBD_1493",
+                              "RVBD_1692",
+                              "RVBD_2643A",
+                              "RVBD_2854",
+                              "RVBD_3261",
+                              "RVBD_3262",
+                              "RVBD_3452"
+                              )
+                    ) %>% 
+  apply(FUN = as.list, MARGIN = 1)
+
+```
+
+### TIMBR call
+
+```{r }
+outfn <- "../data/timbr-rick-11-traits.rds"
+# ensure that inputs to call_timbr all have subjects in same order!
+subject_ids <- rownames(traits)
+##
+indices_gp <- match(subject_ids, rownames(probs))
+gp <- probs[indices_gp, , ]
+##
+if (!file.exists(outfn)){
+  timbr_out <- parallel::mclapply(neto_list, 
+  #timbr_out <- lapply(neto_small, 
+                                  FUN = qtl2effects::call_timbr, 
+                                  mc.cores = parallel::detectCores(),
+                                  traits_df = traits,
+                                  prior_M = prior_M, 
+                                  genoprobs_array = gp,
+                                  addcovar = NULL
+                                  )
+  saveRDS(timbr_out, outfn)
+} else {
+  timbr_out <- readRDS(outfn)
+}
+```
+
+## Examining TIMBR results
+
+We have the object `timbr_out`, a list of length `r length(timbr_out)`. Each element of `timbr_out` corresponds to a single TIMBR analysis, and is itself a list. The names of the outputted objects (for a single TIMBR analysis) are:
+
+```{r names}
+names(timbr_out[[1]])
+```
+
+We can access the 10,000 allelic series (per analysis) by its name `post.M`, as in the following code:
+
+```{r get-postM}
+tr1_postM <- timbr_out[[1]]$post.M
+```
+
+## TIMBR density plots
+
+```{r plots}
+lapply(X = timbr_out, 
+       FUN = TIMBR::TIMBR.plot.haplotypes
+       )
+```
+

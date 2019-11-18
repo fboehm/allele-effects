@@ -3,7 +3,7 @@ TIMBR: Allele effects in TnSeq Hotspots: One marker per trait
 Frederick J. Boehm
 11/15/2019
 
-Last modified: 2019-11-16 10:32:50.
+Last modified: 2019-11-17 19:00:31.
 
 ## Overview
 
@@ -75,6 +75,29 @@ traits_timbr_annotated <- neto_plus %>%
   dplyr::ungroup()
 ```
 
+``` r
+(hot_indices <- neto_plus %>%
+  dplyr::group_by(hs) %>%
+  dplyr::tally() %>%
+  dplyr::mutate(end = cumsum(n)) %>%
+  dplyr::mutate(start = 1L + end - n)
+)
+```
+
+    ## # A tibble: 10 x 4
+    ##       hs     n   end start
+    ##    <int> <int> <int> <int>
+    ##  1     1     9     9     1
+    ##  2     2    15    24    10
+    ##  3     3    15    39    25
+    ##  4     4  1905  1944    40
+    ##  5     5    20  1964  1945
+    ##  6     6  1265  3229  1965
+    ##  7     7     8  3237  3230
+    ##  8     8    80  3317  3238
+    ##  9     9    66  3383  3318
+    ## 10    10     2  3385  3384
+
 ## TIMBR setup
 
 ``` r
@@ -119,51 +142,5 @@ if (!file.exists(outfn)){
                                   addcovar = NULL
                                   )
   saveRDS(timbr_out, outfn)
-} else {
-  timbr_out <- readRDS(outfn)
 }
 ```
-
-``` r
-par(mfrow=c(1,2))    # set the plotting area into a 1*2 array
-purrr::map(.x = timbr_out, .f = function(x){
-  hist(x$post.K)
-  TIMBR::TIMBR.plot.haplotypes(x)
-}
-  )
-```
-
-![](tnseq-timbr-hotspot-1_files/figure-gfm/plots-1.png)<!-- -->![](tnseq-timbr-hotspot-1_files/figure-gfm/plots-2.png)<!-- -->![](tnseq-timbr-hotspot-1_files/figure-gfm/plots-3.png)<!-- -->
-
-    ## [[1]]
-    ## NULL
-    ## 
-    ## [[2]]
-    ## NULL
-    ## 
-    ## [[3]]
-    ## NULL
-
-# Pull out the most probable allelic series for each TIMBR analysis
-
-We should add to our annotations table the LOD scores for every trait -
-marker pair.
-
-``` r
-(t1 <- purrr::map(.x = timbr_out, 
-           .f = function(x){
-             foo <- x$p.M.given.y[1]
-             tibble::tibble(posterior_prob = foo, 
-                            allele_series = names(foo))
-             }
-           ) %>%
-  dplyr::bind_rows()
-)
-```
-
-    ## # A tibble: 3 x 2
-    ##   posterior_prob allele_series  
-    ##            <dbl> <chr>          
-    ## 1          0.149 0,0,1,0,1,1,0,1
-    ## 2          0.192 0,0,0,0,0,0,0,0
-    ## 3          0.281 0,1,1,0,0,0,0,1
