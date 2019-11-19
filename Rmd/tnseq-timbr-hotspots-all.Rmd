@@ -1,11 +1,10 @@
 ---
-title: "TIMBR: Allele effects in TnSeq Hotspots: One marker per trait for hotspot `r params$hot`"
+title: "TIMBR: Allele effects in TnSeq Hotspots: One marker per trait for all 10 hotspots"
 author: "Frederick J. Boehm"
-date: "11/15/2019"
+date: "11/19/2019"
 output: github_document
 params:
   lastmod: !r lubridate::now()
-  hot: 9
 ---
 
 Last modified: `r params$lastmod`.
@@ -24,10 +23,6 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r pkgs}
 library(dplyr)
 library(TIMBR)
-```
-
-```{r which-hots}
-hots <- 1:10
 ```
 
 
@@ -66,50 +61,6 @@ neto <- read.csv("../data/neto_traits_by_probe3_annotated.csv", stringsAsFactors
 
 
 
-```{r}
-
-#%>%
-  dplyr::filter(!is.na(trait)) %>%
-  dplyr::select(- trait_name, - neto.n, - row, - n.traits, - cM, -hs, - chr)
-neto_plus <- tt %>%
-  tidyr::pivot_longer(cols = V2:V35, values_to = "trait", names_to = "trait_name") %>%
-  dplyr::filter(!is.na(trait)) %>%
-  dplyr::select(- trait_name)
-
-(traits_timbr_annotated <- neto_plus %>%
-  dplyr::select(probe, trait) %>%
-  purrr::pmap( 
-           .f = function(probe, trait){
-             pheno <- traits[ , colnames(traits) == trait, drop = FALSE]
-             geno <- probs[ , , dimnames(probs)[[3]] == probe]
-             qtl2::fit1(genoprobs = geno, 
-                        pheno = pheno, 
-                        )$lod
-           }
-             ) %>%
-  purrr::map(.f = function(x){
-    tibble::tibble(lod = x$lod)
-  }) %>%
-  bind_rows() %>%
-  bind_cols(neto_plus) %>%
-  dplyr::select(probe, trait, lod, hs) %>%
-  dplyr::group_by(hs) %>%
-  dplyr::group_by(trait) %>%
-  dplyr::filter(lod == max(lod)) %>%
-  dplyr::ungroup() %>%
-  dplyr::ungroup()
-)
-```
-
-```{r, annotation-tibble}
-(hot_indices <- neto_plus %>%
-  dplyr::group_by(hs) %>%
-  dplyr::tally() %>%
-  dplyr::mutate(end = cumsum(n)) %>%
-  dplyr::mutate(start = 1L + end - n)
-)
-```
-
 ## TIMBR setup
 
 ```{r prior_M-define}
@@ -129,15 +80,14 @@ data(mcv.data) # get A matrix
 ```
 
 ```{r make_neto_list}
-tr_ann_sub <- traits_timbr_annotated %>%
-  dplyr::filter(hs == params$hot) %>%
-  dplyr::select(probe, trait)
-neto_list <- apply(FUN = as.list, X = tr_ann_sub, MARGIN = 1)
+ neto_list <- neto %>%
+  dplyr::select(probe, trait) %>%
+  apply(FUN = as.list, MARGIN = 1)
 ```
 
 
 ```{r }
-outfn <- paste0("../data/timbr-tnseq-neto-traits-one-marker-per-trait-", params$hot, ".rds")
+outfn <- paste0("../data/timbr-tnseq-neto-traits-one-marker-per-trait-all.rds")
 # ensure that inputs to call_timbr all have subjects in same order!
 subject_ids <- rownames(traits)
 ##
@@ -158,6 +108,18 @@ if (!file.exists(outfn)){
 } else {
   timbr_out <- readRDS(outfn)
 }
-names(timbr_out) <- tr_ann_sub$trait
+names(timbr_out) <- neto$trait
 ```
+
+```{r plots}
+lapply(X = timbr_out, 
+       FUN = TIMBR::TIMBR.plot.haplotypes
+       )
+```
+
+```{r annotations}
+neto %>%
+  dplyr::mutate(allele_series = purrr::map_chr(timbr_out, .f = function(x)x$post.M[1]))
+```
+
 

@@ -1,9 +1,10 @@
-TIMBR: Allele effects in TnSeq Hotspots: One marker per trait
+TIMBR: Allele effects in TnSeq Hotspots: One marker per trait for
+hotspot 9
 ================
 Frederick J. Boehm
 11/15/2019
 
-Last modified: 2019-11-18 14:49:15.
+Last modified: 2019-11-19 10:59:52.
 
 ## Overview
 
@@ -158,5 +159,7 @@ if (!file.exists(outfn)){
                                   addcovar = NULL
                                   )
   saveRDS(timbr_out, outfn)
+} else {
+  timbr_out <- readRDS(outfn)
 }
 ```
