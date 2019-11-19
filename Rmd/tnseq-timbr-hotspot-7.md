@@ -1,42 +1,46 @@
----
-title: "TIMBR: Allele effects in TnSeq Hotspots: One marker per trait"
-author: "Frederick J. Boehm"
-date: "11/15/2019"
-output: github_document
-params:
-  lastmod: !r lubridate::now()
-  hot: 9
----
+TIMBR: Allele effects in TnSeq Hotspots: One marker per trait
+================
+Frederick J. Boehm
+11/15/2019
 
-Last modified: `r params$lastmod`.
-
+Last modified: 2019-11-18 15:04:26.
 
 ## Overview
 
-We now consider only one marker per trait-hotspot pair. So, if a Neto trait appears at more than one hotspot, it will be present more than once below. However, if a trait is specific to a single hotspot, I consider it at only one marker, its LOD peak marker within the hotspot.
+We now consider only one marker per trait-hotspot pair. So, if a Neto
+trait appears at more than one hotspot, it will be present more than
+once below. However, if a trait is specific to a single hotspot, I
+consider it at only one marker, its LOD peak marker within the hotspot.
 
-
-
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+``` r
+library(dplyr)
 ```
 
-```{r pkgs}
-library(dplyr)
+    ## 
+    ## Attaching package: 'dplyr'
+
+    ## The following objects are masked from 'package:stats':
+    ## 
+    ##     filter, lag
+
+    ## The following objects are masked from 'package:base':
+    ## 
+    ##     intersect, setdiff, setequal, union
+
+``` r
 library(TIMBR)
 ```
 
-```{r which-hots}
+``` r
 hots <- 1:10
 ```
 
-
-```{r read-genotypes}
+``` r
 probs <- readRDS("../data/genotypes_array.rds")
 traits <- readRDS("../data/tnseq-traits.rds")
 ```
 
-```{r read-csv}
+``` r
 tt <- read.csv("../data/neto_traits_by_probe3_annotated.csv")
 neto <- tt %>%
   tidyr::pivot_longer(cols = V2:V35, values_to = "trait", names_to = "trait_name") %>%
@@ -47,7 +51,7 @@ neto_plus <- tt %>%
   dplyr::filter(!is.na(trait)) %>%
   dplyr::select(- trait_name)
 
-(traits_timbr_annotated <- neto_plus %>%
+traits_timbr_annotated <- neto_plus %>%
   dplyr::select(probe, trait) %>%
   purrr::pmap( 
            .f = function(probe, trait){
@@ -69,10 +73,9 @@ neto_plus <- tt %>%
   dplyr::filter(lod == max(lod)) %>%
   dplyr::ungroup() %>%
   dplyr::ungroup()
-)
 ```
 
-```{r, annotation-tibble}
+``` r
 (hot_indices <- neto_plus %>%
   dplyr::group_by(hs) %>%
   dplyr::tally() %>%
@@ -81,9 +84,23 @@ neto_plus <- tt %>%
 )
 ```
 
+    ## # A tibble: 10 x 4
+    ##       hs     n   end start
+    ##    <int> <int> <int> <int>
+    ##  1     1     9     9     1
+    ##  2     2    15    24    10
+    ##  3     3    15    39    25
+    ##  4     4  1905  1944    40
+    ##  5     5    20  1964  1945
+    ##  6     6  1265  3229  1965
+    ##  7     7     8  3237  3230
+    ##  8     8    80  3317  3238
+    ##  9     9    66  3383  3318
+    ## 10    10     2  3385  3384
+
 ## TIMBR setup
 
-```{r prior_M-define}
+``` r
 ##### From GK example code
 # Specify allelic series prior
 # Suggested by Wes
@@ -94,12 +111,11 @@ prior_M <- list(model.type = "crp", # crp - Chinese Restaurant Process
                 prior.alpha.rate = 2.333415)
 ```
 
-
-```{r load-data-timbr}
+``` r
 data(mcv.data) # get A matrix
 ```
 
-```{r make_neto_list}
+``` r
 tr_ann_sub <- traits_timbr_annotated %>%
   dplyr::filter(hs == params$hot) %>%
   dplyr::select(probe, trait)
@@ -107,8 +123,7 @@ neto_list <- apply(FUN = as.list, X = tr_ann_sub, MARGIN = 1)
 neto_small <- neto_list[1:3]
 ```
 
-
-```{r }
+``` r
 outfn <- paste0("../data/timbr-tnseq-neto-traits-one-marker-per-trait-", params$hot, ".rds")
 # ensure that inputs to call_timbr all have subjects in same order!
 subject_ids <- rownames(traits)
@@ -129,4 +144,3 @@ if (!file.exists(outfn)){
   saveRDS(timbr_out, outfn)
 }
 ```
-
