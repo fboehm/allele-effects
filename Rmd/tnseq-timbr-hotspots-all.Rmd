@@ -2,7 +2,10 @@
 title: "TIMBR: Allele effects in TnSeq Hotspots: One marker per trait for all 10 hotspots"
 author: "Frederick J. Boehm"
 date: "11/19/2019"
-output: github_document
+output: 
+  github_document: default
+  html_document: 
+    code_folding: hide
 params:
   lastmod: !r lubridate::now()
 ---
@@ -86,7 +89,7 @@ data(mcv.data) # get A matrix
 ```
 
 
-```{r }
+```{r timbr-call}
 outfn <- paste0("../data/timbr-tnseq-neto-traits-one-marker-per-trait-all.rds")
 # ensure that inputs to call_timbr all have subjects in same order!
 subject_ids <- rownames(traits)
@@ -111,15 +114,32 @@ if (!file.exists(outfn)){
 names(timbr_out) <- neto$trait
 ```
 
-```{r plots}
-lapply(X = timbr_out, 
-       FUN = TIMBR::TIMBR.plot.haplotypes
-       )
-```
-
 ```{r annotations}
-neto %>%
-  dplyr::mutate(allele_series = purrr::map_chr(timbr_out, .f = function(x)x$post.M[1]))
+annots <- neto %>%
+  dplyr::mutate(allele_series = purrr::map(timbr_out, .f = function(x){
+    pp <- x$p.M.given.y[1]
+    return(tibble::tibble(series = names(pp), 
+                   probability = pp
+                   )
+    )
+    }
+    )
+                )
+print(annots %>% tidyr::unnest(allele_series), n = 93)
 ```
 
+The annotations for each plot appear before the plot.
+
+```{r plots}
+for (i in seq_along(timbr_out)){
+  print(paste0(annots[i, ], collapse = " "))
+  TIMBR::TIMBR.plot.haplotypes(timbr_out[[i]])
+}
+         
+         
+```
+
+```{r write-csv}
+readr::write_csv(annots %>% tidyr::unnest(allele_series), path = "../data/tnseq-neto-traits-annotated-10-hotspots.csv")
+```
 
