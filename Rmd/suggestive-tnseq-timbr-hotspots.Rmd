@@ -1,0 +1,222 @@
+---
+title: "TIMBR: Allele effects in TnSeq Hotspots: One marker per trait for all 10 hotspots"
+author: "Frederick J. Boehm"
+date: "11/21/2019"
+output: 
+  github_document: default
+  html_document: 
+    code_folding: hide
+params:
+  lastmod: !r lubridate::now()
+---
+
+Last modified: `r params$lastmod`.
+
+
+## Overview
+
+We now consider only one marker per trait-hotspot pair. The set of traits differs from those in previous analyses. We now read a csv file that I made by hand from Rick Baker's html file.
+
+
+
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r pkgs}
+library(dplyr)
+library(TIMBR)
+```
+
+
+```{r read-genotypes}
+aprobs <- readRDS("../data/aprobs.rds")
+map <- readRDS("../data/map.rds")
+probs <- readRDS("../data/genotypes_array.rds")
+traits <- readRDS("../data/tnseq-traits.rds")
+```
+
+```{r read-csv}
+trait_ann <- readr::read_csv("../data/v2_byhand_hotspot_tnseq_traits.csv")
+```
+
+## Run `scan1` on each trait
+
+```{r scan1}
+
+pheno <- traits[ , match(trait_ann$trait, colnames(traits)),
+                 drop = FALSE]
+s1out <- qtl2::scan1(aprobs, pheno)
+# check if every trait is represented in table, and where it should be!
+hot_chr <- c("4", "8", "9", "10", "11", "11", "13", "14", "18", "X") 
+hot_index <- 1:10
+hs_ann <- tibble::tibble(hs = hot_index, chr = hot_chr) %>%
+  dplyr::right_join(trait_ann, by = "hs")
+
+ann_all <- qtl2::find_peaks(s1out, map = map, threshold = 4) %>%
+  tibble::as_tibble() %>%
+  dplyr::filter(as.character(chr) %in% hot_chr) %>%
+  dplyr::full_join(hs_ann, by = c("lodcolumn" = "trait", "chr")) %>%
+  dplyr::filter(!is.na(hs)) %>%
+  dplyr::arrange(hs) %>%
+  dplyr::rename(trait = lodcolumn) %>%
+  dplyr::select( - lodindex) %>%
+  dplyr::left_join(tibble(marker = names(unlist(map)), pos = unlist(map)), by = "pos" ) %>%
+  dplyr::mutate(splitted = stringr::str_split(marker, 
+                                                    pattern = "\\."
+  )
+                                                     %>%
+                          sapply(FUN = function(x)x[2])
+                ) 
+  
+  
+``` 
+
+
+## TIMBR setup
+
+```{r prior_M-define}
+##### From GK example code
+# Specify allelic series prior
+# Suggested by Wes
+# Influences how much prior weight it places on more or less complicated allelic series
+prior_M <- list(model.type = "crp", # crp - Chinese Restaurant Process
+                prior.alpha.type = "gamma",
+                prior.alpha.shape = 1,
+                prior.alpha.rate = 2.333415)
+```
+
+
+```{r load-data-timbr}
+data(mcv.data) # get A matrix
+```
+
+```{r make_neto_list}
+ neto_list <- ann_all %>%
+  dplyr::rename(probe = splitted) %>%
+  dplyr::select(probe, trait) %>%
+  apply(FUN = as.list, MARGIN = 1)
+```
+
+
+```{r timbr-call}
+outfn <- paste0("../data/suggestive-timbr-tnseq-neto-traits-one-marker-per-trait-all.rds")
+# ensure that inputs to call_timbr all have subjects in same order!
+subject_ids <- rownames(traits)
+##
+indices_gp <- match(subject_ids, rownames(probs))
+gp <- probs[indices_gp, , ]
+##
+if (!file.exists(outfn)){
+  timbr_out <- parallel::mclapply(neto_list, 
+  #timbr_out <- lapply(neto_small, 
+                                  FUN = qtl2effects::call_timbr, 
+                                  mc.cores = parallel::detectCores(),
+                                  traits_df = traits,
+                                  prior_M = prior_M, 
+                                  genoprobs_array = gp,
+                                  addcovar = NULL
+                                  )
+  saveRDS(timbr_out, outfn)
+} else {
+  timbr_out <- readRDS(outfn)
+}
+names(timbr_out) <- trait_ann$trait
+```
+
+```{r annotations}
+annots <- hs_ann %>%
+  dplyr::mutate(allele_series = purrr::map(timbr_out, .f = function(x){
+    pp <- x$p.M.given.y[1]
+    return(tibble::tibble(series = names(pp), 
+                   probability = pp
+                   )
+    )
+    }
+    )
+                )
+print(annots %>% tidyr::unnest(allele_series))
+```
+
+The annotations for each plot appear before the plot.
+
+```{r plots}
+for (i in seq_along(timbr_out)){
+  print(paste0(annots[i, ], collapse = " "))
+  TIMBR::TIMBR.plot.haplotypes(timbr_out[[i]])
+}
+```
+
+```{r write-csv}
+readr::write_csv(annots %>% tidyr::unnest(allele_series), path = "../data/suggestive-tnseq-neto-traits-annotated-10-hotspots.csv")
+```
+
+## Use the other prior for allelic series
+
+```{r prior_M-define-2}
+##### From GK example code
+# Specify allelic series prior
+# Suggested by Wes
+# Influences how much prior weight it places on more or less complicated allelic series
+prior_M <- list(model.type = "crp", # crp - Chinese Restaurant Process
+                prior.alpha.type = "gamma",
+                prior.alpha.shape = 2.3009322,
+                prior.alpha.rate = 0.7488104)
+```
+
+```{r timbr-call-2}
+outfn <- "../data/suggestive-timbr-tnseq-prior2.rds"
+# ensure that inputs to call_timbr all have subjects in same order!
+subject_ids <- rownames(traits)
+##
+indices_gp <- match(subject_ids, rownames(probs))
+gp <- probs[indices_gp, , ]
+##
+if (!file.exists(outfn)){
+  timbr_out <- parallel::mclapply(neto_list, 
+  #timbr_out <- lapply(neto_small, 
+                                  FUN = qtl2effects::call_timbr, 
+                                  mc.cores = parallel::detectCores(),
+                                  traits_df = traits,
+                                  prior_M = prior_M, 
+                                  genoprobs_array = gp,
+                                  addcovar = NULL
+                                  )
+  saveRDS(timbr_out, outfn)
+} else {
+  timbr_out <- readRDS(outfn)
+}
+names(timbr_out) <- trait_ann$trait
+```
+
+```{r annotations-2}
+annots <- hs_ann %>%
+  dplyr::mutate(allele_series = purrr::map(timbr_out, .f = function(x){
+    pp <- x$p.M.given.y[1]
+    return(tibble::tibble(series = names(pp), 
+                   probability = pp
+                   )
+    )
+    }
+    )
+                )
+print(annots %>% tidyr::unnest(allele_series))
+```
+
+The annotations for each plot appear before the plot.
+
+```{r plots-2}
+for (i in seq_along(timbr_out)){
+  print(paste0(annots[i, ], collapse = " "))
+  TIMBR::TIMBR.plot.haplotypes(timbr_out[[i]])
+}
+         
+         
+```
+
+```{r write-csv-2}
+fn <- "../data/suggestive-tnseq-prior2.csv"
+readr::write_csv(annots %>% tidyr::unnest(allele_series), path = fn)
+```
