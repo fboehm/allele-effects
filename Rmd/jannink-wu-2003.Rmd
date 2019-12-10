@@ -1,13 +1,45 @@
-# Jannink and Wu 2003
+---
+title: "@jannink2003estimating"
+author: "Frederick J. Boehm"
+date: "12/6/2019"
+output: github_document
+bibliography: effects.bib
+params:
+  lastmod: !r lubridate::now()
+---
+
+Last modified: `r params$lastmod`.
+
+
+## Overview
+
+We write code below to implement Jannink and Wu's methods [@jannink2003estimating].
+
+They use a scalar Metropolis-Hastings procedure. 
+
+Since we have no $X$, per their notation, in our model, we omit it from the MCMC.
+
+In Jannink and Wu's notation, $Q$ is our HMM-derived allele probabilities matrix.
+
+$C$ is the matrix that does the "collapsing", from 8 (for CC and DO) alleles to $l$ alleles.
+
+$a$ is the allele effects vector.
+
+Thus, for MCMC, we take the procedure of page 135 of @jannink2003estimating and modify it to:
+
+1. update Q (allele probabilities matrix)
+1. update allele effects a
+1. update residual variance
+1. update C given l
+1. update l, number of alleles (between 2 and 8 for DO & CC)
+
+## update QTL inheritance matrix Q
+
+@jannink2003estimating cite a 1994 paper by RC Jansen. I believe this is a mis-specified citation. The article that they cite doesn't contain any discussion of full conditionals. Unless they're citing it for another reason...
 
 
 
-
-# update QTL inheritance matrix Q
-
-
-
-# update QTL allelic effects a
-# update family means b and residual variance s2
-# update QTL allelic configuration conditional on allelic number, C| l;
-# update the number of alleles l
+## update QTL allelic effects a
+## update family means b and residual variance s2
+## update QTL allelic configuration conditional on allelic number, C| l;
+## update the number of alleles l
