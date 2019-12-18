@@ -1,0 +1,97 @@
+---
+title: "Refining mega-hotspots"
+author: "Frederick J. Boehm"
+date: "12/18/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Rick previously calculated bayes intervals for the ten hotspots. Two of them, namely hotspots 4 and 6, on Chromosomes 10 and 11, are what we're calling "mega-hotspots" because they have many associated traits.
+
+Rick's bayes intervals, per "hotspot_allele_effects5.html", for hotspots 4 and 6 are:
+
+Hotspot 4: (0, 66)
+
+Hotspot 6: (0, 73)
+
+
+We now want to see if we can use the strongest peaks and their bayes intervals to refine our definition of each hotspot.
+
+`qtl2` has a function, `bayes_int`, that uses a `scan1` output object and a map to determine a bayes interval for the peak.
+
+Rick has stored the Neto hotspot results in "neto_traits_by_probe3_annotated.csv".
+
+Let's read it into R. Recall that it has one row per marker (ie, marker within a hotspot).
+
+```{r, read-neto}
+library(magrittr)
+neto <- readr::read_csv("../data/neto_traits_by_probe3_annotated.csv") %>%
+  dplyr::filter(hs %in% c(4, 6)) %>%
+  dplyr::select(- probe, - chr, - cM, - neto.n, - row, - n.traits) %>%
+  tidyr::pivot_longer(cols = V2:V35) %>%
+  dplyr::filter(!is.na(value))
+```
+We now have a collection of traits for which we must run `scan1`. 
+
+```{r, filter}
+neto_unique_traits <- neto %>%
+  dplyr::filter(!duplicated(value))
+```
+
+We see that there are 62 unique traits between the two megahotspots.
+
+Now, let's run `scan1` for the 62 traits.
+
+```{r, prep-scan1}
+# read the tnseq traits
+tnseq <- readRDS("../data/tnseq-traits.rds")
+hot_traits <- tnseq[, colnames(tnseq) %in% neto_unique_traits$value]
+# load rick's mapping objects
+load("../data/reduced_map_qtl2_mapping_objects.Rdata")
+```
+
+```{r, scan1}
+kinship <- qtl2::calc_kinship(genoprobs.1, "loco")
+fn <- "../data/scan1_hs46.rds"
+if (!file.exists(fn)){
+  s1hot <- qtl2::scan1(genoprobs = genoprobs.1, 
+            pheno = hot_traits, 
+            kinship = kinship, 
+            addcovar = addcovar, 
+            reml = TRUE, 
+            cores = 0
+            )
+} else {
+  s1hot <- readRDS(fn)
+}
+```
+
+```{r findpeaks}
+(p10 <- qtl2::find_peaks(s1hot, map = map.1, threshold = 6) %>%
+  dplyr::filter(chr == 10) %>%
+  dplyr::filter(lod == max(lod))
+)
+```
+
+```{r bayes_intervals}
+qtl2::bayes_int(scan1_output = s1hot[, p10$lodindex, drop = FALSE], map = map.1, chr = 10)
+```
+
+
+```{r findpeaks11}
+(p11 <- qtl2::find_peaks(s1hot, map = map.1, threshold = 6) %>%
+  dplyr::filter(chr == 11) %>%
+  dplyr::filter(lod == max(lod))
+)
+```
+
+```{r bayes_intervals11}
+qtl2::bayes_int(scan1_output = s1hot[, p11$lodindex, drop = FALSE], map = map.1, chr = 11)
+```
+
+The above analysis uses only the strongest peak for each mega-hotspot when determining the boundaries (ie, bayes credible intervals).
+
+
