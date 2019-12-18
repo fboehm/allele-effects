@@ -92,6 +92,11 @@ qtl2::bayes_int(scan1_output = s1hot[, p10$lodindex, drop = FALSE], map = map.1,
 qtl2::bayes_int(scan1_output = s1hot[, p11$lodindex, drop = FALSE], map = map.1, chr = 11)
 ```
 
+We'll look at the LODs for the Chromosome 11 hotspot.
+
+```{r plotlod}
+qtl2::plot_scan1(s1hot, map = map.1, lodcolumn = p11$lodindex, chr = 11)
+```
 The above analysis uses only the strongest peak for each mega-hotspot when determining the boundaries (ie, bayes credible intervals).
 
 
