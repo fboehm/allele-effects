@@ -80,6 +80,7 @@ if (!file.exists(fn)){
 )
 ```
 
+
 ```{r bayes_intervals}
 (bayes10 <- qtl2::bayes_int(scan1_output = s1hot[, p10$lodindex, drop = FALSE], map = map.1, chr = 10) %>%
    tibble::as_tibble() %>%
@@ -110,6 +111,7 @@ qtl2::plot_scan1(s1hot, map = map.1, lodcolumn = p11$lodindex, chr = 11)
 ```
 The above analysis uses only the strongest peak for each mega-hotspot when determining the boundaries (ie, bayes credible intervals).
 
+<<<<<<< HEAD
 ## What are the 'suggestive' traits?
 
 We'll use the suggestive traits from Rick's v2 file.
@@ -164,4 +166,168 @@ qtl2::find_peaks(s1hot_sugg, map = map.1) %>%
 
 
 
+=======
+## Top traits in hotspot 4
 
+```{r findpeaks-4}
+thr <- 5
+(p10_top <- qtl2::find_peaks(s1hot, map = map.1, threshold = thr) %>%
+  dplyr::filter(chr == 10) %>%
+  dplyr::filter(pos > 50) %>%
+  dplyr::arrange(desc(lod))
+)
+```
+
+Because I used the `find_peaks` function, I'm seeing only three traits with peaks at positions greater than 50 cM. Other traits might have high lods in this interval, but not have peaks in that interval. They thus wouldn't be in the table above.
+
+Also, I used a threshold of `r thr` when defining the peaks. Some traits may have peaks below `r thr`.
+
+Let's look at allele effects for the top three traits.
+
+## Allele effects in hotspot 4
+
+### Trait 53, hotspot 4
+
+```{r, tr53}
+# calc allele effects
+qtl2::scan1coef(genoprobs = genoprobs.1[, 10], 
+            pheno = hot_traits[, 53, drop = FALSE], 
+            kinship = kinship[[10]], 
+            addcovar = addcovar, 
+            reml = TRUE) %>%
+  qtl2::plot_coefCC(map = map.1[10], scan1_output = s1hot[, 53, drop = FALSE])
+```
+
+### Trait 48, hotspot 4
+
+
+```{r, tr48}
+# calc allele effects
+qtl2::scan1coef(genoprobs = genoprobs.1[, 10], 
+            pheno = hot_traits[, 48, drop = FALSE], 
+            kinship = kinship[[10]], 
+            addcovar = addcovar, 
+            reml = TRUE) %>%
+  qtl2::plot_coefCC(map = map.1[10], scan1_output = s1hot[, 48, drop = FALSE])
+```
+
+### Trait 57, hotspot 4
+
+```{r, tr57}
+# calc allele effects
+qtl2::scan1coef(genoprobs = genoprobs.1[, 10], 
+            pheno = hot_traits[, 57, drop = FALSE], 
+            kinship = kinship[[10]], 
+            addcovar = addcovar, 
+            reml = TRUE) %>%
+  qtl2::plot_coefCC(map = map.1[10], scan1_output = s1hot[, 57, drop = FALSE])
+```
+
+### Trait 30, hotspot 4
+
+```{r, tr30}
+# calc allele effects
+qtl2::scan1coef(genoprobs = genoprobs.1[, 10], 
+            pheno = hot_traits[, 30, drop = FALSE], 
+            kinship = kinship[[10]], 
+            addcovar = addcovar, 
+            reml = TRUE) %>%
+  qtl2::plot_coefCC(map = map.1[10], scan1_output = s1hot[, 30, drop = FALSE])
+```
+
+
+### Trait 10, hotspot 4
+
+```{r, tr10}
+# calc allele effects
+qtl2::scan1coef(genoprobs = genoprobs.1[, 10], 
+            pheno = hot_traits[, 10, drop = FALSE], 
+            kinship = kinship[[10]], 
+            addcovar = addcovar, 
+            reml = TRUE) %>%
+  qtl2::plot_coefCC(map = map.1[10], scan1_output = s1hot[, 10, drop = FALSE])
+```
+>>>>>>> 6dbc9ee1a88dbd324b4b69c92b8e2f2681da811b
+
+
+## Top traits for Hotspot 6
+
+```{r findpeaks-6}
+(top <- qtl2::find_peaks(s1hot, map = map.1, threshold = thr) %>%
+  dplyr::filter(chr == 11) %>%
+   dplyr::filter(pos > 50) %>% # ensure that peaks are near Rick's estimated hotspot position
+  dplyr::arrange(desc(lod))
+)
+```
+
+### Trait 21, hotspot 6
+
+```{r, tr21}
+# calc allele effects
+qtl2::scan1coef(genoprobs = genoprobs.1[, 11], 
+            pheno = hot_traits[, 21, drop = FALSE], 
+            kinship = kinship[[11]], 
+            addcovar = addcovar, 
+            reml = TRUE) %>%
+  qtl2::plot_coefCC(map = map.1[11], scan1_output = s1hot[, 21, drop = FALSE])
+```
+
+### Trait 26, hotspot 6
+
+```{r, tr26}
+# calc allele effects
+qtl2::scan1coef(genoprobs = genoprobs.1[, 11], 
+            pheno = hot_traits[, 26, drop = FALSE], 
+            kinship = kinship[[11]], 
+            addcovar = addcovar, 
+            reml = TRUE) %>%
+  qtl2::plot_coefCC(map = map.1[11], scan1_output = s1hot[, 26, drop = FALSE])
+```
+
+### Trait 41, hotspot 6
+
+```{r, tr41}
+# calc allele effects
+qtl2::scan1coef(genoprobs = genoprobs.1[, 11], 
+            pheno = hot_traits[, 41, drop = FALSE], 
+            kinship = kinship[[11]], 
+            addcovar = addcovar, 
+            reml = TRUE) %>%
+  qtl2::plot_coefCC(map = map.1[11], scan1_output = s1hot[, 41, drop = FALSE])
+```
+
+### Trait 32, hotspot 6
+
+```{r, tr32}
+# calc allele effects
+qtl2::scan1coef(genoprobs = genoprobs.1[, 11], 
+            pheno = hot_traits[, 32, drop = FALSE], 
+            kinship = kinship[[11]], 
+            addcovar = addcovar, 
+            reml = TRUE) %>%
+  qtl2::plot_coefCC(map = map.1[11], scan1_output = s1hot[, 32, drop = FALSE])
+```
+
+### Trait 19, hotspot 6
+
+```{r, tr19}
+# calc allele effects
+qtl2::scan1coef(genoprobs = genoprobs.1[, 11], 
+            pheno = hot_traits[, 19, drop = FALSE], 
+            kinship = kinship[[11]], 
+            addcovar = addcovar, 
+            reml = TRUE) %>%
+  qtl2::plot_coefCC(map = map.1[11], scan1_output = s1hot[, 19, drop = FALSE])
+```
+
+## Bayes intervals for strongest traits (near Rick's estimated hotspot positions)
+
+We now calculate the bayes intervals, one per hotspot, for the trait with the strongest (highest) LOD near Rick's estimated hotspot positions (per Rick's v5 html).
+
+```{r bayes10}
+qtl2::bayes_int(scan1_output = s1hot[, 53, drop = FALSE], map = map.1, chr = 10)
+```
+
+```{r bayes11}
+qtl2::bayes_int(scan1_output = s1hot[, 21, drop = FALSE], map = map.1, chr = 11)
+```
