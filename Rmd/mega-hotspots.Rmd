@@ -3,7 +3,11 @@ title: "Refining mega-hotspots"
 author: "Frederick J. Boehm"
 date: "12/18/2019"
 output: html_document
+params: 
+  lastmod: !r lubridate::now()
 ---
+
+Last modified: `r params$lastmod`.
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
@@ -77,19 +81,26 @@ if (!file.exists(fn)){
 ```
 
 ```{r bayes_intervals}
-qtl2::bayes_int(scan1_output = s1hot[, p10$lodindex, drop = FALSE], map = map.1, chr = 10)
+(bayes10 <- qtl2::bayes_int(scan1_output = s1hot[, p10$lodindex, drop = FALSE], map = map.1, chr = 10) %>%
+   tibble::as_tibble() %>%
+   dplyr::mutate(chr = 10)
+)
 ```
 
+We add filtering by position below to ensure that we get a trait with proper peak position, ie, position within the neto hotspot 6.
 
 ```{r findpeaks11}
 (p11 <- qtl2::find_peaks(s1hot, map = map.1, threshold = 6) %>%
-  dplyr::filter(chr == 11) %>%
+  dplyr::filter(chr == 11, pos > 50, pos < 70) %>%
   dplyr::filter(lod == max(lod))
 )
 ```
 
 ```{r bayes_intervals11}
-qtl2::bayes_int(scan1_output = s1hot[, p11$lodindex, drop = FALSE], map = map.1, chr = 11)
+(bayes11 <- qtl2::bayes_int(scan1_output = s1hot[, p11$lodindex, drop = FALSE], map = map.1, chr = 11) %>%
+   tibble::as_tibble() %>%
+   dplyr::mutate(chr = 11)
+)
 ```
 
 We'll look at the LODs for the Chromosome 11 hotspot.
@@ -98,5 +109,59 @@ We'll look at the LODs for the Chromosome 11 hotspot.
 qtl2::plot_scan1(s1hot, map = map.1, lodcolumn = p11$lodindex, chr = 11)
 ```
 The above analysis uses only the strongest peak for each mega-hotspot when determining the boundaries (ie, bayes credible intervals).
+
+## What are the 'suggestive' traits?
+
+We'll use the suggestive traits from Rick's v2 file.
+
+I previously transcribed these from the v2 html to a csv file.
+
+```{r read-sugg}
+sugg <- readr::read_csv("../data/v2_byhand_hotspot_tnseq_traits.csv")
+```
+
+Now, genome-wide scans for the suggestive traits of hotspots 4 and 6, on Chr 10 and 11.
+
+```{r, filter-sugg}
+sugg46 <- sugg %>%
+  dplyr::filter(hs %in% c(4, 6)) %>%
+  dplyr::mutate(chr = 10 * (hs == 4) + 11 * (hs == 6))
+```
+
+```{r scan1-sugg}
+hot_sugg <- tnseq[, colnames(tnseq) %in% sugg46$trait]
+fn <- "../data/scan1_hs46-sugg.rds"
+if (!file.exists(fn)){
+  s1hot_sugg <- qtl2::scan1(genoprobs = genoprobs.1, 
+            pheno = hot_sugg, 
+            kinship = kinship, 
+            addcovar = addcovar, 
+            reml = TRUE, 
+            cores = 0
+            )
+} else {
+  s1hot_sugg <- readRDS(fn)
+}
+
+```
+
+Get the peaks from `s1hot_sugg`.
+
+```{r find_sugg_peaks}
+qtl2::find_peaks(s1hot_sugg, map = map.1) %>%
+  dplyr::filter(chr %in% c(10, 11)) %>%
+  dplyr::group_by(lodcolumn) %>%
+  dplyr::filter(lod == max(lod)) %>%
+  dplyr::ungroup() %>%
+  dplyr::mutate(chr = as.numeric(as.character(chr))) %>%
+  dplyr::inner_join(sugg46, by = c(c("chr" = "chr"), c("lodcolumn" = "trait"))) %>%
+  dplyr::left_join(dplyr::bind_rows(bayes10, bayes11) %>%
+                     dplyr::select(- pos), by = "chr") %>%
+  dplyr::mutate(in_bayes_ci = (pos >= ci_lo & pos <= ci_hi)) %>%
+  dplyr::arrange(hs, pos) %>%
+  gt::gt()
+``` 
+
+
 
 
