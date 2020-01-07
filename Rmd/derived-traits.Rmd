@@ -76,6 +76,31 @@ qtl2::plot_coefCC(s1c_7, map = map.1, scan1_output = s1[, 7, drop = FALSE])
 We notice that all three plots have yellow and purple at opposite extremes.
 
 
+## Permutations
+
+Let's find permutation thresholds for the traits.
+
+```{r perms}
+fn <- "../data/derived-traits-perms-1000.rds"
+
+if (!file.exists(fn)) {
+  perms <- qtl2::scan1perm(genoprobs = genoprobs.1, 
+                           pheno = tr_mat, 
+                           kinship = kinship, 
+                           n_perm = 1000, 
+                           reml = TRUE, 
+                           cores = 0 # for using multiple cores on the ghpcc cluster
+                           )
+  saveRDS(perms, fn)
+} else {
+  perms <- readRDS(fn)
+}
+
+```
+
+
+
+
 ## Other ideas
 
 One might also consider multivariate QTL mapping in addition to mapping these "derived" traits one at a time.
