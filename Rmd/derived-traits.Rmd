@@ -10,7 +10,9 @@ params:
 Last modified: `r params$lastmod`.
 
 
-
+```{r setup2, include=FALSE, dev="CairoPNG"}
+knitr::opts_chunk$set(dev="CairoPNG")
+```
 
 
 ```{r setup, include=FALSE}
