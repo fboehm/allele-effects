@@ -54,24 +54,6 @@ qtl2::find_peaks(s1, map = map.1, threshold = 6) %>%
   dplyr::arrange(desc(lod))
 ```
 
-Note that the top 3 peaks are all on Chr 10 and fairly close to each other.
-
-
-```{r get-effects}
-s1c_25 <- qtl2::scan1coef(genoprobs = genoprobs.1[,10], pheno = tr_mat[, 25], kinship = kinship$`10`, reml = TRUE)
-s1c_23 <- qtl2::scan1coef(genoprobs = genoprobs.1[,10], pheno = tr_mat[, 23], kinship = kinship$`10`, reml = TRUE)
-s1c_7 <- qtl2::scan1coef(genoprobs = genoprobs.1[,10], pheno = tr_mat[, 7], kinship = kinship$`10`, reml = TRUE)
-```
-
-```{r plots}
-qtl2::plot_coefCC(s1c_25, map = map.1, scan1_output = s1[, 25, drop = FALSE])
-qtl2::plot_coefCC(s1c_23, map = map.1, scan1_output = s1[, 23, drop = FALSE])
-qtl2::plot_coefCC(s1c_7, map = map.1, scan1_output = s1[, 7, drop = FALSE])
-```
-
-We notice that all three plots have yellow and purple at opposite extremes.
-
-
 ## Permutations
 
 Let's find permutation thresholds for the traits.
