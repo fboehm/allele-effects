@@ -67,8 +67,6 @@ s1c_7 <- qtl2::scan1coef(genoprobs = genoprobs.1[,10], pheno = tr_mat[, 7], kins
 qtl2::plot_coefCC(s1c_25, map = map.1, scan1_output = s1[, 25, drop = FALSE])
 qtl2::plot_coefCC(s1c_23, map = map.1, scan1_output = s1[, 23, drop = FALSE])
 qtl2::plot_coefCC(s1c_7, map = map.1, scan1_output = s1[, 7, drop = FALSE])
-
-
 ```
 
 We notice that all three plots have yellow and purple at opposite extremes.
@@ -95,6 +93,20 @@ if (!file.exists(fn)) {
 }
 
 ```
+
+```{r thresholds}
+apply(X = perms, FUN = quantile, probs = 0.95, MARGIN = 2)
+```
+
+```{r get-pvalue}
+calc_pvalue <- function(observed_lod, maxlods){
+  mean(observed_lod <= maxlods)
+}
+qtl2::find_peaks(s1, map = map.1, threshold = 6) %>%
+  dplyr::arrange(desc(lod)) %>%
+  dplyr::mutate(pvalue = purrr::map_dbl(.f = calc_pvalue, .x = lod, maxlods = perms[ , lodindex]))
+```
+
 
 
 
