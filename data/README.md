@@ -23,3 +23,8 @@ Clare emailed a csv file with “derived” traits on Jan 6, 2020. I don’t
 right now know the methods by which these traits were derived.
 
 The traits are in the file “CC\_clust\_tomap.csv”.
+
+## Eigentraits
+
+I added the file ‘eigenvectors.csv’ to the data subdir on Jan 8, 2020.
+It contains eigentraits that Chris shared via email.
