@@ -3,6 +3,13 @@
 language: R
 cache: packages
 
+addons:
+  apt:
+    packages:
+    - libgsl-dev
+    - libgsl2
+
+
 matrix:
   include:
   - r: devel
@@ -17,4 +24,5 @@ matrix:
 addons:
   apt:
     packages:
-    - libgsl0-dev
+    - libgsl-dev
+    - libgsl2
