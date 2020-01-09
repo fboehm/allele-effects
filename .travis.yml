@@ -7,7 +7,8 @@ addons:
   apt:
     packages:
     - libgsl-dev
-    - libgsl2
+    - libgsl23
+    - libgslcblas0
 
 
 matrix:
