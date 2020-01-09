@@ -106,9 +106,44 @@ qtl2::find_peaks(s1, map = map.1, threshold = 6) %>%
 ```
 
 
+# Now, with additive covariates (batch indicators)
+
+```{r scan1-addcovar}
+tr_mat <- as.matrix(tr[, - c(1:3)])
+rownames(tr_mat) <- tr$CC.Line
+s1 <- qtl2::scan1(genoprobs = genoprobs.1, pheno = tr_mat, addcovar = addcovar, kinship = kinship, reml = TRUE)
+```
+
+## Permutations
+
+Let's find permutation thresholds for the traits, again, with inclusion of additive covariates.
+
+```{r perms}
+fn <- "../data/derived-traits-addcovar-perms-1000.rds"
+
+if (!file.exists(fn)) {
+  perms <- qtl2::scan1perm(genoprobs = genoprobs.1, 
+                           pheno = tr_mat, 
+                           addcovar = addcovar,
+                           kinship = kinship, 
+                           n_perm = 1000, 
+                           reml = TRUE, 
+                           cores = 0 # for using multiple cores on the ghpcc cluster
+                           )
+  saveRDS(perms, fn)
+} else {
+  perms <- readRDS(fn)
+}
+
+```
+
+
+```{r get-pvalue}
+qtl2::find_peaks(s1, map = map.1, threshold = 6) %>%
+  dplyr::arrange(desc(lod)) %>%
+  dplyr::mutate(pvalue = purrr::map2_dbl(.f = function(lod, lodindex, perms){qtl2effects::calc_pvalue(observed_lod = lod, maxlods = perms[ , lodindex])}, .x = lod, .y = lodindex, perms = perms)) %>%
+  dplyr::arrange(pvalue)
+```
 
 
 
-## Other ideas
-
-One might also consider multivariate QTL mapping in addition to mapping these "derived" traits one at a time.
