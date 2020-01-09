@@ -2,6 +2,7 @@
 
 export("%>%")
 export(allele_map_vec_to_matrix)
+export(calc_pvalue)
 export(call_timbr)
 export(collapse_geno)
 importFrom(magrittr,"%>%")

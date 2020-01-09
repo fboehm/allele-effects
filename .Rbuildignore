@@ -10,3 +10,4 @@ shell
 ^\.covrignore$
 ^.*\.Rproj$
 ^\.Rproj\.user$
+communications
