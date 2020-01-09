@@ -99,12 +99,10 @@ apply(X = perms, FUN = quantile, probs = 0.95, MARGIN = 2)
 ```
 
 ```{r get-pvalue}
-calc_pvalue <- function(observed_lod, maxlods){
-  mean(observed_lod <= maxlods)
-}
 qtl2::find_peaks(s1, map = map.1, threshold = 6) %>%
   dplyr::arrange(desc(lod)) %>%
-  dplyr::mutate(pvalue = purrr::map_dbl(.f = calc_pvalue, .x = lod, maxlods = perms[ , lodindex]))
+  dplyr::mutate(pvalue = purrr::map2_dbl(.f = function(lod, lodindex, perms){qtl2effects::calc_pvalue(observed_lod = lod, maxlods = perms[ , lodindex])}, .x = lod, .y = lodindex, perms = perms)) %>%
+  dplyr::arrange(pvalue)
 ```
 
 
