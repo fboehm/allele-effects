@@ -19,8 +19,3 @@ matrix:
   - r: 3.3
   - r: 3.2
 
-addons:
-  apt:
-    packages:
-    - libgsl-dev
-    - libgsl2
