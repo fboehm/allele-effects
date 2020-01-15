@@ -9,6 +9,9 @@ params:
 
 Last modified: `r params$lastmod`.
 
+```{r setup2, include=FALSE, dev="CairoPNG"}
+knitr::opts_chunk$set(dev="CairoPNG")
+```
 
 
 
@@ -17,7 +20,7 @@ Last modified: `r params$lastmod`.
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-First, we read the derived traits from Clare's csv file.
+First, we read the derived traits from Tom's csv file.
 
 ```{r readcsv}
 tr <- readr::read_csv("../data/eigenvectors.csv")
@@ -87,6 +90,42 @@ qtl2::find_peaks(s1, map = map.1, threshold = 6) %>%
   dplyr::arrange(pvalue)
 ```
 
+# Now, with additive covariates (batch indicators)
+
+```{r scan1-addcovar}
+s1 <- qtl2::scan1(genoprobs = genoprobs.1, pheno = tr_mat, addcovar = addcovar, kinship = kinship, reml = TRUE)
+```
+
+## Permutations
+
+Let's find permutation thresholds for the traits, again, with inclusion of additive covariates.
+
+```{r perms-addcovar}
+fn <- "../data/eigentraits-addcovar-perms-1000.rds"
+
+if (!file.exists(fn)) {
+  perms <- qtl2::scan1perm(genoprobs = genoprobs.1, 
+                           pheno = tr_mat, 
+                           addcovar = addcovar,
+                           kinship = kinship, 
+                           n_perm = 1000, 
+                           reml = TRUE, 
+                           cores = 0 # for using multiple cores on the ghpcc cluster
+                           )
+  saveRDS(perms, fn)
+} else {
+  perms <- readRDS(fn)
+}
+
+```
+
+
+```{r get-pvalue-addcovar}
+qtl2::find_peaks(s1, map = map.1, threshold = 6) %>%
+  dplyr::arrange(desc(lod)) %>%
+  dplyr::mutate(pvalue = purrr::map2_dbl(.f = function(lod, lodindex, perms){qtl2effects::calc_pvalue(observed_lod = lod, maxlods = perms[ , lodindex])}, .x = lod, .y = lodindex, perms = perms)) %>%
+  dplyr::arrange(pvalue)
+```
 
 
 
