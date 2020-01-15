@@ -3,7 +3,11 @@ title: "Clinical traits analysis with TIMBR"
 author: "Frederick J. Boehm"
 date: "10/24/2019"
 output: html_document
+params:
+  lastmod: !r lubridate::now()
 ---
+
+Last modified: `r params$lastmod`.
 
 ```{r}
 library(tidyverse)
@@ -204,3 +208,11 @@ tibble(trait = names(sapply(X = s1_collapsed, FUN = max)),
        collapsed_lod = sapply(X = s1_collapsed, FUN = max)) %>%
   bind_cols(as_tibble(t(qmat)))
 ```
+
+
+
+
+
+
+
+
