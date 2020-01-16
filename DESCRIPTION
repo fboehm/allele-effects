@@ -16,7 +16,8 @@ Suggests:
     tidyr,
     parallel,
     readr,
-    covr
+    covr,
+    TIMBR
 Encoding: UTF-8
 LazyData: true
 Depends: 
@@ -24,7 +25,6 @@ Depends:
 RoxygenNote: 6.1.1
 Imports: 
     magrittr,
-    stringr,
-    TIMBR
+    stringr
 Remotes: 
     wesleycrouse/TIMBR
