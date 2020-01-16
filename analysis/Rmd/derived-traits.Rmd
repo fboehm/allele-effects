@@ -111,8 +111,6 @@ qtl2::find_peaks(s1, map = map.1, threshold = 6) %>%
 # Now, with additive covariates (batch indicators)
 
 ```{r scan1-addcovar}
-tr_mat <- as.matrix(tr[, - c(1:3)])
-rownames(tr_mat) <- tr$CC.Line
 s1 <- qtl2::scan1(genoprobs = genoprobs.1, pheno = tr_mat, addcovar = addcovar, kinship = kinship, reml = TRUE)
 ```
 
