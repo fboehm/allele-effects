@@ -7,5 +7,7 @@ allele_map_vec_to_matrix <- function(allele_map){
   for (i in 1:ncol(mat)){
     mat[ , i] <- as.numeric(allele_map == i - 1)
   }
+  rownames(mat) <- LETTERS[1:nrow(mat)]
+  colnames(mat) <- paste0("allele", 1:ncol(mat))
   return(mat)
 }
