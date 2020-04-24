@@ -1,0 +1,21 @@
+---
+title: "TIMBR analyses for cluster traits"
+author: "Frederick J. Boehm"
+date: "3/22/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## From Rick's email
+
+> I’d be interested in getting TIMBR results for some of our recent cluster mappings. If you have the time, I attached mapping results and a phenotype matrix. The traits of interest are yellow and black (with suffix .allScoresWin).
+
+## Read the csv files
+
+```{r}
+es_w <- readr::read_csv("../data/pheno679_eigenscores_from_WGCNA_unsigned.csv")
+peaks <- readr::read_csv("../data/pheno679_eigenscores_unsigned_maxLOD_peaks.csv")
+```
