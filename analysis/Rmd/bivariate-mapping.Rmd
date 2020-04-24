@@ -1,5 +1,5 @@
 ---
-title: "Trivariate mapping of cluster traits"
+title: "Trivariate and bivariate mappings of cluster traits"
 author: "Frederick J. Boehm"
 date: "3/23/2020"
 output: html_document
