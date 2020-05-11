@@ -18,8 +18,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ## Read the csv files
 
 ```{r}
-cluster_traits <- readr::read_csv("../data/pheno679_eigenscores_from_WGCNA_unsigned.csv")
-peaks <- readr::read_csv("../data/pheno679_eigenscores_unsigned_maxLOD_peaks.csv")
+cluster_traits <- readr::read_csv("../data/pheno_eigenscores_from_WGCNA_all60_win.csv")
 ```
 ```{r}
 load("../data/reduced_map_qtl2_mapping_objects.Rdata")
@@ -27,7 +26,7 @@ kinship <- qtl2::calc_kinship(probs = genoprobs.1, type = "loco")
 ```
 
 ```{r}
-phe <- as.matrix(cluster_traits[, c(2, 18)])
+phe <- as.matrix(cluster_traits[, c("yellowgreen", "magenta")])
 rownames(phe) <- cluster_traits$X1
 start <- max(which(map.1$`10` < 20)) 
 end <- min(which(map.1$`10` > 45))
