@@ -26,7 +26,7 @@ kinship <- qtl2::calc_kinship(probs = genoprobs.1, type = "loco")
 ```
 
 ```{r}
-phe <- as.matrix(cluster_traits[, c("yellowgreen", "magenta")])
+phe <- as.matrix(cluster_traits[, c("greenyellow", "magenta")])
 rownames(phe) <- cluster_traits$X1
 start <- max(which(map.1$`10` < 20)) 
 end <- min(which(map.1$`10` > 45))
@@ -36,7 +36,7 @@ end <- min(which(map.1$`10` > 45))
 library(magrittr)
 ```
 
-## Pairwise analyses of yellow and black
+## Pairwise analyses of greenyellow and magenta
 
 ```{r}
 sp_out <- qtl2pleio::scan_pvl(probs = genoprobs.1$`10`, 
