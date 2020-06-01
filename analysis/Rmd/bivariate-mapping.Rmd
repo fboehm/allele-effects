@@ -58,7 +58,6 @@ sp_out %>%
   qtl2pleio::calc_profile_lods() %>%
   qtl2pleio::add_pmap(pmap = map.1$`10`) %>%
   ggplot2::ggplot() + ggplot2::geom_line(ggplot2::aes(x = marker_position, y = profile_lod, colour = trait))
-ggsave("../results/bivariate-analysis-modules.jpg")
 ```
 
 ```{r}
@@ -106,7 +105,6 @@ sp_out %>%
   qtl2pleio::calc_profile_lods() %>%
   qtl2pleio::add_pmap(pmap = map.1$`2`) %>%
   ggplot2::ggplot() + ggplot2::geom_line(ggplot2::aes(x = marker_position, y = profile_lod, colour = trait))
-ggsave(paste0("../results/bivariate-Chr2-", colnames(phe)[1],"_", colnames(phe)[2], ".png"))
 ```
 
 ```{r}
@@ -144,7 +142,6 @@ sp_out %>%
   qtl2pleio::calc_profile_lods() %>%
   qtl2pleio::add_pmap(pmap = map.1$`2`) %>%
   ggplot2::ggplot() + ggplot2::geom_line(ggplot2::aes(x = marker_position, y = profile_lod, colour = trait))
-ggsave(paste0("../results/bivariate-Chr2-", colnames(phe)[1],"_", colnames(phe)[3], ".jpg"))
 ```
 
 ```{r}
@@ -182,7 +179,6 @@ sp_out %>%
   qtl2pleio::calc_profile_lods() %>%
   qtl2pleio::add_pmap(pmap = map.1$`2`) %>%
   ggplot2::ggplot() + ggplot2::geom_line(ggplot2::aes(x = marker_position, y = profile_lod, colour = trait))
-ggsave(paste0("../results/bivariate-Chr2-", colnames(phe)[2],"_", colnames(phe)[3], ".jpg"))
 ```
 
 ```{r}
@@ -222,7 +218,6 @@ sp_out %>%
   qtl2pleio::calc_profile_lods() %>%
   qtl2pleio::add_pmap(pmap = map.1$`2`) %>%
   ggplot2::ggplot() + ggplot2::geom_line(ggplot2::aes(x = marker_position, y = profile_lod, colour = trait))
-ggsave(paste0("../results/trivariate-Chr2.jpg"))
 ```
 
 ```{r}
@@ -273,7 +268,6 @@ sp_out %>%
   qtl2pleio::calc_profile_lods() %>%
   qtl2pleio::add_pmap(pmap = map.1$`15`) %>%
   ggplot2::ggplot() + ggplot2::geom_line(ggplot2::aes(x = marker_position, y = profile_lod, colour = trait))
-ggsave(paste0("../results/bivariate-Chr15-", colnames(phe)[1],"_", colnames(phe)[2], ".jpg"))
 ```
 
 ```{r}
