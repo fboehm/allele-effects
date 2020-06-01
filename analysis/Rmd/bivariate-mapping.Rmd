@@ -19,8 +19,9 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r}
 cluster_traits <- readr::read_csv("../data/pheno_eigenscores_from_WGCNA_all60_win.csv")
-peaks <- readr::read_csv("../data/pheno679_eigenscores_unsigned_maxLOD_peaks.csv")
 ```
+
+
 ```{r}
 load("../data/reduced_map_qtl2_mapping_objects.Rdata")
 kinship <- qtl2::calc_kinship(probs = genoprobs.1, type = "loco")
@@ -37,7 +38,7 @@ end <- min(which(map.1$`10` > 45))
 library(magrittr)
 ```
 
-## Pairwise analyses of greenyellow and magenta WCGNA traits
+## WCGNA traits 
 
 ```{r}
 sp_out <- qtl2pleio::scan_pvl(probs = genoprobs.1$`10`, 
