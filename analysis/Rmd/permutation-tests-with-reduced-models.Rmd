@@ -1,0 +1,99 @@
+---
+title: "Permutation tests for reduced scans"
+author: "Frederick J. Boehm"
+date: "5/22/2020"
+output: html_document
+---
+
+## Goals
+
+To examine the type I error rate for two approaches to doing permutation tests
+for reduced scans.
+
+## Setting
+
+Standard QTL mapping, like in qtl2, uses 8 founder alleles for CC and DO. 
+
+It fits the model:
+
+$$
+Y = p_A\beta_A + ... + p_H\beta_H + \epsilon
+$$
+
+With publication of TIMBR software, we now have a method to infer allelic series at a QTL. 
+
+With that inferred allelic series, we can reduce the linear model to, say, 
+
+$$
+Y = p_1\gamma_1 + p_2\gamma_2 + \eta
+$$
+
+when there are two alleles in the allelic series.
+
+How do we use permutations to calibrate the LOD scores?
+
+One approach is to simply permute the trait values and scan with the reduced model. 
+
+An alternative is, for each permuted trait, repeat the entire procedure: 
+
+1. 8-allele scan
+1. at max LOD score, infer the allelic series.
+1. perform a reduced scan (informed by that allelic series) and record the max LOD from the genome
+
+I anticipate that the former will have inflated type I error rate. How can I verify this??
+
+## Simulation study
+
+Simulate 1000 traits for the CC mice
+
+```{r}
+load("../data/reduced_map_qtl2_mapping_objects.Rdata")
+nmouse <- nrow(Xcovar)
+nsims <- 10
+sims <- matrix(data = rnorm(n = nsims * nmouse, 
+                            mean = 0, 
+                            sd = 1), 
+               nrow = nmouse, 
+               ncol = nsims)
+rownames(sims) <- rownames(Xcovar)
+colnames(sims) <- paste0("t", 1:nsims)
+```
+
+
+### Analyzing the original trait
+
+1. 8-allele scan
+1. find the highest peak & use it for TIMBR
+  a. find the most probable allelic series
+  b. collapse genotypes according to most probable allelic series
+1. k-allele scan. record max lod
+
+### Permutations: approach 1
+
+1. Use the same collapsed genotypes as in the original trait analysis
+1. k-allele scan of permuted trait. Record max lod.
+
+```{r}
+#pval <- numeric(length = nsims)
+#for (i in 1:nsims){
+i <- 1 
+s1out <- qtl2::scan1(genoprobs = genoprobs.1, 
+                     pheno = sims[ , i, drop = FALSE], 
+                     cores = 0)
+# TIMBR at max lod peak
+TIMBR::TIMBR(y = sims[ , i, drop = FALSE], 
+             prior.D = )
+  # permutations with collapsed geno
+s1perms <- qtl2::scan1perm(genoprobs = collapsed_geno, 
+                           pheno = sims[ , i, drop = FALSE], 
+                           n_perm = 1000, 
+                           cores = 0)
+pval[i] <- mean(s1out >= s1perms)
+#}
+```
+
+## Permutations, approach 2
+
+```{r}
+
+```

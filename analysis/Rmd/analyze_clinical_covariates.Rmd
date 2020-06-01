@@ -1,0 +1,191 @@
+---
+title: "Analyze Clinical Covariates"
+author: "REB"
+date: "5/21/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+##### Object
+
+1. To determine if including batch covariates in the IL10 scans actually ipmrove the fit.
+
+2. To investigate why the TIMBR results using batch covariates yield much "worse" results than those obtained using batch-corrected phenotype values and no covariates.
+
+##### Procedure
+
+Load data.
+
+```{r data}
+load("~/Desktop/TIMBR/CC_cs_36state.Rdata")
+load("~/Desktop/TIMBR/reduced_map_qtl2_mapping_objects.Rdata")
+pheno <- read.csv("/Users/bakerr/Desktop/rqtl2_loco_v4_mirror/batch_corrected_phenos_summarized_05OCT2019_v4.csv", row.names=1)
+# remove parents
+pheno <- pheno[grep("CC0", row.names(pheno)), ]
+# fix row.names
+tmp <- row.names(pheno)
+tmp <- sub(".GeniUnc", "cs", tmp)
+tmp <- sub(".TauUnc", "cs", tmp)
+tmp <- sub(".Unc", "cs", tmp)
+row.names(pheno) <- tmp
+pheno.raw <- read.csv("/Users/bakerr/Desktop/rqtl2_loco_v4_mirror/pheno_clinical_4qtl2_win2_05OCT2019_v4.csv", row.names=1)
+reduced.probes <- do.call(`c`, lapply(genoprobs.1, function(x) dimnames(x)[[3]]))
+reduced.probes <- as.vector(reduced.probes)
+keep <- dimnames(model.probs)[[3]] %in% reduced.probes
+model.probs.reduced <- model.probs[row.names(pheno), , keep]
+map.Mb <- qtl2convert::map_df_to_list(GM.snps, chr="Chrom", pos="pos")
+# limit phenotypes to spleenCFU/CEQ, IL10
+pheno.raw <- pheno.raw[, c(1,2,13)]
+pheno <- pheno[, c(5,6,20)]
+colnames(pheno)[1:2] <- c("spleenCFU", "spleenCEQ")
+```
+
+scan1 -- use uncorrected phenotype values + batch covariates for QTL scans.
+
+```{r map}
+library(qtl2)
+kinship <- calc_kinship(genoprobs.1, "loco")
+out <- scan1(genoprobs = genoprobs.1, pheno = pheno.raw, kinship = kinship, addcovar=addcovar, Xcovar = Xcovar, cores = 2)
+# trait maxLOD probes
+pos <- c(bayes_int(out, map.Mb, chr=2, lodcolumn=1)[2], bayes_int(out, map.Mb, chr=2, lodcolumn=2)[2], bayes_int(out, map.Mb, chr=2, lodcolumn=3)[2])
+probes <- sapply(pos, find_marker, map=map.Mb, chr=2)
+print(data.frame(probes=probes, pos=pos, row.names=colnames(pheno)))
+```
+
+Fit QTL's and extract the batch coefficients.
+
+```{r effects, fig.align='center'}
+cfu <- pheno.raw[, 1]
+names(cfu) <- row.names(pheno)
+ceq <- pheno.raw[, 2]
+names(ceq) <- row.names(pheno)
+il10 <- pheno.raw[, 3]
+names(il10) <- row.names(pheno)
+eff <- list()
+idx <- 1
+for (i in probes[1:2]) {
+  eff[[idx]] <- fit1(genoprobs.1[[2]][,,i], cfu, kinship[[2]], addcovar=addcovar)$coef
+  eff[[idx+2]] <- fit1(genoprobs.1[[2]][,,i], ceq, kinship[[2]], addcovar=addcovar)$coef
+  eff[[idx+4]] <- fit1(genoprobs.1[[2]][,,i], il10, kinship[[2]], addcovar=addcovar)$coef
+  idx <- idx + 1
+}
+eff.df <- do.call(cbind, eff)
+colnames(eff.df) <- c(paste("spleenCFU @", round(pos[1:2], digits=2)), paste("spleenCEQ @", round(pos[1:2], digits=2)), paste("IL10 @", round(pos[1:2], digits=2)))
+```
+
+Get coefficients used for batch correction and compare to the actual scan1 batch coefficients.
+
+```{r barplot, fig.align='center'}
+batch.cor <- list()
+for (i in 1:3) {
+  diff <- pheno.raw[, i] - pheno[, i]
+  t <- table(diff)
+  t <- t[order(t, decreasing=T)]
+  batch.cor[[i]] <- as.numeric(names(t))[1:3]
+}
+df <- do.call(rbind, batch.cor)
+row.names(df) <- paste("lm", colnames(pheno), sep=":")
+colnames(df) <- paste0("block", 1:3)
+tmp <- cbind(eff.df[9:10, ], t(df[, 2:3]))
+tmp <- tmp[, c(1,2,7,3,4,8,5,6,9)]
+par(mar=c(8, 4, 4, 2) + 0.1, xpd=T)
+barplot(tmp, beside=T, las=2, cex.names=0.8, ylab="coefficient")
+legend("top", c("batch2", "batch3"), fill=c("grey30", "grey80"), ncol=2, inset=-0.25, cex=0.9)
+```
+
+The batch coefficients from spleen CFU/CEQ are quite similar to those obtained from simple regression of the phenotype values. The scan1 coefficients for IL10 are smaller (in absolute value). Is the QTL fit actually improved by including the covariates?
+
+Test fit with and without covariates. [The comparison is made at the maxLOD probe from the covariate scan. It's possible/likely the scan w/o covariates may produce a different maxLOD probe!]
+
+```{r test}
+df <- as.data.frame(genoprobs.1[[2]][, , probes[1]])
+df$spleenCFU <- pheno.raw$spleenCFU
+fit1 <- lm(spleenCFU ~ ., df)
+df <- cbind(df, addcovar[grep("CC0", row.names(addcovar)), ])
+fit2 <- lm(spleenCFU ~ ., df)
+print(lmtest::lrtest(fit1, fit2))
+df <- as.data.frame(genoprobs.1[[2]][, , probes[1]])
+df$spleenCEQ <- pheno.raw$spleenCEQ
+fit1 <- lm(spleenCEQ ~ ., df)
+df <- cbind(df, addcovar[grep("CC0", row.names(addcovar)), ])
+fit2 <- lm(spleenCEQ ~ ., df)
+print(lmtest::lrtest(fit1, fit2))
+df <- as.data.frame(genoprobs.1[[2]][, , probes[1]])
+df$IL10 <- pheno.raw$IL10
+fit1 <- lm(IL10 ~ ., df)
+df <- cbind(df, addcovar[grep("CC0", row.names(addcovar)), ])
+fit2 <- lm(IL10 ~ ., df)
+print(lmtest::lrtest(fit1, fit2))
+```
+
+It appears the covariates improve the fit, at least at this probe.
+
+Find the maxLOD probes for scans using raw phenotype values and no covariates.
+
+```{r no_covar}
+out2 <- scan1(genoprobs = genoprobs.1, pheno = pheno.raw, kinship = kinship, Xcovar = Xcovar, cores = 2)
+pos2 <- c(bayes_int(out2, map.Mb, chr=2, lodcolumn=1)[2], bayes_int(out2, map.Mb, chr=2, lodcolumn=2)[2], bayes_int(out2, map.Mb, chr=2, lodcolumn=3)[2])
+probes2 <- sapply(pos2, find_marker, map=map.Mb, chr=2)
+print(data.frame(probes=probes2, pos=pos2, row.names=colnames(pheno)))
+```
+
+The spleenCFU maxLOD shifts appreciably, spleenCEQ somewhat, but IL10 maps to exactly the same probe.
+
+Use scan1 batch coefficients for QTL fit at 174.2925 Mb to correct raw IL10 values. Run TIMBR on the corrected phenotype values.
+
+```{r TIMBR_1, eval=FALSE}
+library(TIMBR)
+data(mcv.data)
+prior.M1 <- list(model.type = "crp", # crp - Chinese Restaurant Process
+  prior.alpha.type = "gamma",
+  prior.alpha.shape = 1,
+  prior.alpha.rate = 2.333415)
+addcovar <- addcovar[grep("CC0", row.names(addcovar)), ]
+# probes[1]
+b2 <- eff.df[9, 5]
+b3 <- eff.df[10, 5]
+corr <- pheno.raw
+corr[addcovar$block2 == 1, "IL10"] <- corr[addcovar$block2 == 1, "IL10"] - b2
+corr[addcovar$block3 == 1, "IL10"] <- corr[addcovar$block3 == 1, "IL10"] - b3
+trait <- "IL10"
+res <- list()
+P <- model.probs.reduced[, , probes[1]]
+prior.D <- mcv.data$prior.D
+prior.D$P <- P
+res[[1]] <- TIMBR(corr[, trait], prior.D, prior.M1)
+```
+
+Repeat for QTL at 178.2520 Mb.
+
+```{r TIMBR_2, eval=FALSE}
+b2 <- eff.df[9, 6]
+b3 <- eff.df[10, 6]
+corr <- pheno.raw
+corr[addcovar$block2 == 1, "IL10"] <- corr[addcovar$block2 == 1, "IL10"] - b2
+corr[addcovar$block3 == 1, "IL10"] <- corr[addcovar$block3 == 1, "IL10"] - b3
+P <- model.probs.reduced[, , probes[2]]
+prior.D <- mcv.data$prior.D
+prior.D$P <- P
+res[[2]] <- TIMBR(corr[, trait], prior.D, prior.M1)
+save(res, file="TIMBR_res_IL10_fit_coef.Rdata")
+```
+
+Plot results
+
+```{r plots, fig.align='center'}
+load("TIMBR_res_IL10_fit_coef.Rdata")
+for (i in 1:2) {
+  cat("IL10 @ ", pos[i], " Mb\n")
+  TIMBR::TIMBR.plot.haplotypes(res[[i]])
+  TIMBR::TIMBR.plot.circos(res[[i]])
+}
+```
+
+##### Conclusions
+
+1. IL10 mapping should include the batch covariates. In any event it would be hard to justify NOT using batch covariates.
+
+2. The TIMBR runs with the appropriately corrected phenotype values yield results very similar to those obtained with the original batch-corrected values. Why including the covariates in the TIMBR runs gave spurious results is a mystery. Probably my error in constructing the "Z" design matrix.

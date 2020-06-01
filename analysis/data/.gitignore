@@ -4,3 +4,6 @@
 *.Rdata
 *.zip
 cluster_assignments.xlsx
+TIMBR_for_clinical_v4_M1_Z.RData
+analyze_clinical_covariates.RData
+clin_P25_peak_info_win2_05OCT2019_v4.xlsx

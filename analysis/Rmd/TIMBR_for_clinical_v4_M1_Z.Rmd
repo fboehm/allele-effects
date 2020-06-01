@@ -1,0 +1,174 @@
+---
+title: "TIMBR for Clinical -- M1 Prior"
+author: "REB"
+date: "5/20/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+##### Object
+
+Run TIMBR with M1 prior to estimate allele effects for the spleenCFU/CEQ and IL10 clinical traits.
+
+Use uncorrected phenotype values and include batch covariates in TIMBR (Z argument). No PxG plots produced.
+
+##### Procedure
+
+Load data. Use batch-corrected phenotypes. [Does TIMBR allow for covariates?]
+
+```{r data}
+#load("~/Desktop/TIMBR/CC_cs_36state.Rdata")
+#load("~/Desktop/TIMBR/reduced_map_qtl2_mapping_objects.Rdata")
+load("../data/reduced_map_qtl2_mapping_objects.Rdata")
+load("../data/TIMBR_for_clinical_v4_M1_Z.RData")
+#pheno <- read.csv("/Users/bakerr/Desktop/rqtl2_loco_v4_mirror/pheno_clinical_4qtl2_win2_05OCT2019_v4.csv", row.names=1)
+reduced.probes <- do.call(`c`, lapply(genoprobs.1, function(x) dimnames(x)[[3]]))
+reduced.probes <- as.vector(reduced.probes)
+keep <- dimnames(model.probs)[[3]] %in% reduced.probes
+model.probs.reduced <- model.probs[row.names(pheno), , keep]
+map.Mb <- qtl2convert::map_df_to_list(GM.snps, chr="Chrom", pos="pos")
+# limit phenotypes to spleenCFU/CEQ, IL10
+#pheno <- pheno[, c(1,2,13)]
+#colnames(pheno)[1:2] <- c("spleenCFU", "spleenCEQ")
+addcovar <- addcovar[row.names(addcovar) %in% row.names(pheno), ]
+```
+
+scan1 -- use uncorrected phenotype values + batch covariates
+
+```{r map}
+library(qtl2)
+kinship <- calc_kinship(genoprobs.1, "loco")
+out <- scan1(genoprobs = genoprobs.1, pheno = pheno, kinship = kinship, addcovar=addcovar, Xcovar = Xcovar, cores = 2)
+# trait maxLOD probes
+pos <- c(bayes_int(out, map.Mb, chr=2, lodcolumn=1)[2], bayes_int(out, map.Mb, chr=2, lodcolumn=2)[2], bayes_int(out, map.Mb, chr=2, lodcolumn=3)[2])
+probes <- sapply(pos, find_marker, map=map.Mb, chr=2)
+print(data.frame(probes=probes, pos=pos, row.names=colnames(pheno)))
+```
+
+spleenCFU and IL10 have coincident maxLOD peaks at 174.2925 Mb on chr2.
+
+Plot chr2.
+
+```{r plot_scan1, fig.align='center'}
+pal <- RColorBrewer::brewer.pal(3, "Set1")
+plot_scan1(out, map.Mb, chr=2, col=pal[1], ylim=c(0,10), xlim=c(150,185))
+plot_scan1(out, map.Mb, chr=2, lodcolumn=2, col=pal[2], add=T)
+plot_scan1(out, map.Mb, chr=2, lodcolumn=3, col=pal[3], add=T)
+abline(v=pos, lty=3)
+legend("topleft", c(colnames(pheno), "Trait maxLODs"), lty=c(1,1,1,3), lwd=c(2,2,2,1), col=c(pal, "black"), cex=0.9, bg="gray90")
+```
+
+Run TIMBR for spleenCFU (use M1 prior). Save results in list and write to disk.
+
+```{r spleenCFU, results='hide', eval=FALSE}
+library(TIMBR)
+data(mcv.data)
+trait <- "spleenCFU"
+prior.M1 <- list(model.type = "crp", # crp - Chinese Restaurant Process
+  prior.alpha.type = "gamma",
+  prior.alpha.shape = 1,
+  prior.alpha.rate = 2.333415)
+res.cfu <- list()
+df <- cbind(pheno$spleenCFU, addcovar)
+colnames(df)[1] <- "spleenCFU"
+ff <- spleenCFU ~ block2 + block3
+m <- model.frame(ff, df)
+mat <- model.matrix(ff, m)
+for (i in 1:2) {
+  P <- model.probs.reduced[, , probes[i]]
+  prior.D <- mcv.data$prior.D
+  prior.D$P <- P
+  res.cfu[[i]] <- TIMBR(pheno[, trait], prior.D, prior.M1, Z=mat)
+}
+save(res.cfu, file="TIMBR_res_spleenCFU_M1_Z.Rdata")
+```
+
+Repeat for spleenCEQ
+
+```{r spleenCEQ, results='hide', eval=FALSE}
+trait <- "spleenCEQ"
+res.ceq <- list()
+for (i in 1:2) {
+  P <- model.probs.reduced[, , probes[i]]
+  prior.D <- mcv.data$prior.D
+  prior.D$P <- P
+  res.ceq[[i]] <- TIMBR(pheno[, trait], prior.D, prior.M1, Z=mat)
+}
+save(res.ceq, file="TIMBR_res_spleenCEQ_M1_Z.Rdata")
+```
+
+And for IL10
+
+```{r IL10, results='hide', eval=FALSE}
+trait <- "IL10"
+res.il10 <- list()
+for (i in 1:2) {
+  P <- model.probs.reduced[, , probes[i]]
+  prior.D <- mcv.data$prior.D
+  prior.D$P <- P
+  res.il10[[i]] <- TIMBR(pheno[, trait], prior.D, prior.M1)
+}
+save(res.il10, file="TIMBR_res_IL10_M1_Z.Rdata")
+```
+
+Plot results.
+
+```{r plots, fig.align='center'}
+# spleenCFU
+pos.rnd <- round(pos, digits=2)
+load("TIMBR_res_spleenCFU_M1_Z.Rdata")
+for (i in 1:2) {
+  cat("spleenCFU @ ", pos.rnd[i], " Mb\n")
+  TIMBR::TIMBR.plot.haplotypes(res.cfu[[i]])
+  TIMBR::TIMBR.plot.circos(res.cfu[[i]])
+}
+# spleenCEQ
+load("TIMBR_res_spleenCEQ_M1_Z.Rdata")
+for (i in 1:2) {
+  cat("spleenCEQ @ ", pos.rnd[i], " Mb\n")
+  TIMBR::TIMBR.plot.haplotypes(res.ceq[[i]])
+  TIMBR::TIMBR.plot.circos(res.ceq[[i]])
+}
+# IL10
+load("TIMBR_res_IL10_M1_Z.Rdata")
+for (i in 1:2) {
+  cat("IL10 @ ", pos.rnd[i], " Mb\n")
+  TIMBR::TIMBR.plot.haplotypes(res.il10[[i]])
+  TIMBR::TIMBR.plot.circos(res.il10[[i]])
+}
+```
+
+Calculate allele effects and plot (CC colors).
+
+```{r effects, fig.align='center'}
+par(mar=c(9, 4, 4, 2) + 0.1)
+cfu <- as.matrix(pheno[, 1])
+row.names(cfu) <- row.names(pheno)
+ceq <- as.matrix(pheno[, 2])
+row.names(ceq) <- row.names(pheno)
+il10 <- as.matrix(pheno[, 3])
+row.names(il10) <- row.names(pheno)
+eff <- list()
+idx <- 1
+for (i in probes[1:2]) {
+  eff[[idx]] <- fit1(genoprobs.1[[2]][,,i], cfu, kinship[[2]], addcovar=addcovar)$coef
+  eff[[idx+2]] <- fit1(genoprobs.1[[2]][,,i], ceq, kinship[[2]], addcovar=addcovar)$coef
+  eff[[idx+4]] <- fit1(genoprobs.1[[2]][,,i], il10, kinship[[2]], addcovar=addcovar)$coef
+  idx <- idx + 1
+}
+eff.df <- do.call(cbind, eff)
+colnames(eff.df) <- c(paste("spleenCFU @", round(pos[1:2], digits=2)), paste("spleenCEQ @", round(pos[1:2], digits=2)), paste("IL10 @", round(pos[1:2], digits=2)))
+eff.df <- eff.df[1:8, ]
+plot(c(1,6), c(max(eff.df)+1, min(eff.df)), type="n", ylab="allele effect", xlab="", xaxt="n", cex.axis=0.9, cex.lab=0.9, main="Effects")
+axis(1, at=1:6, labels=colnames(eff.df), las=2, cex.axis=0.9)
+for (i in 1:6) {
+  points(rep(i, 8), eff.df[, i], pch="+", cex=1.2, col=CCcolors)
+}
+abline(v=c(2.5, 4.5))
+abline(h=mean(unlist(eff.df[-4, ])), lty=3)
+```
+
+##### Conclusions
