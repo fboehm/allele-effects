@@ -46,7 +46,7 @@ sp_out <- qtl2pleio::scan_pvl(probs = genoprobs.1$`10`,
                                 kinship = kinship$`10`,
                                 start_snp = start,
                                 n_snp = end - start + 1, 
-                                n_cores = 0
+                                n_cores = nc
                                 )
 (lrt <- qtl2pleio::calc_lrt_tib(sp_out))
 ```
@@ -69,7 +69,7 @@ b_out <- qtl2pleio::boot_pvl(probs = genoprobs.1$`10`,
                     kinship = kinship$`10`,
                     start_snp = start,
                     n_snp = end - start + 1, 
-                    n_cores = 0, 
+                    n_cores = nc, 
                     pleio_peak_index = pp_index,
                     nboot_per_job = 400
                    )
@@ -94,7 +94,7 @@ sp_out <- qtl2pleio::scan_pvl(probs = genoprobs.1$`2`,
                                 kinship = kinship$`2`,
                                 start_snp = start,
                                 n_snp = end - start + 1, 
-                                n_cores = 0
+                                n_cores = nc
                                 )
 (lrt <- qtl2pleio::calc_lrt_tib(sp_out))
 ```
@@ -118,7 +118,7 @@ b_out <- qtl2pleio::boot_pvl(probs = genoprobs.1$`2`,
                     kinship = kinship$`2`,
                     start_snp = start,
                     n_snp = end - start + 1, 
-                    n_cores = 0, 
+                    n_cores = nc, 
                     pleio_peak_index = pp_index,
                     nboot_per_job = 400
                    )
@@ -132,7 +132,7 @@ sp_out <- qtl2pleio::scan_pvl(probs = genoprobs.1$`2`,
                                 kinship = kinship$`2`,
                                 start_snp = start,
                                 n_snp = end - start + 1, 
-                                n_cores = 0
+                                n_cores = nc
                                 )
 (lrt <- qtl2pleio::calc_lrt_tib(sp_out))
 ```
@@ -156,7 +156,7 @@ b_out <- qtl2pleio::boot_pvl(probs = genoprobs.1$`2`,
                     kinship = kinship$`2`,
                     start_snp = start,
                     n_snp = end - start + 1, 
-                    n_cores = 0, 
+                    n_cores = nc, 
                     pleio_peak_index = pp_index,
                     nboot_per_job = 400
                    )
@@ -170,7 +170,7 @@ sp_out <- qtl2pleio::scan_pvl(probs = genoprobs.1$`2`,
                                 kinship = kinship$`2`,
                                 start_snp = start,
                                 n_snp = end - start + 1, 
-                                n_cores = 0
+                                n_cores = nc
                                 )
 (lrt <- qtl2pleio::calc_lrt_tib(sp_out))
 ```
@@ -194,7 +194,7 @@ b_out <- qtl2pleio::boot_pvl(probs = genoprobs.1$`2`,
                     kinship = kinship$`2`,
                     start_snp = start,
                     n_snp = end - start + 1, 
-                    n_cores = 0, 
+                    n_cores = nc, 
                     pleio_peak_index = pp_index,
                     nboot_per_job = 400
                    )
@@ -210,7 +210,7 @@ sp_out <- qtl2pleio::scan_pvl(probs = genoprobs.1$`2`,
                                 kinship = kinship$`2`,
                                 start_snp = start,
                                 n_snp = end - start + 1, 
-                                n_cores = 0
+                                n_cores = nc
                                 )
 (lrt <- qtl2pleio::calc_lrt_tib(sp_out))
 ```
@@ -234,7 +234,7 @@ b_out <- qtl2pleio::boot_pvl(probs = genoprobs.1$`2`,
                     kinship = kinship$`2`,
                     start_snp = start,
                     n_snp = end - start + 1, 
-                    n_cores = 0, 
+                    n_cores = nc, 
                     pleio_peak_index = pp_index,
                     nboot_per_job = 400
                    )
@@ -261,7 +261,7 @@ sp_out <- qtl2pleio::scan_pvl(probs = genoprobs.1$`15`,
                                 kinship = kinship$`15`,
                                 start_snp = start,
                                 n_snp = end - start + 1, 
-                                n_cores = 0
+                                n_cores = nc
                                 )
 (lrt <- qtl2pleio::calc_lrt_tib(sp_out))
 ```
@@ -285,7 +285,7 @@ b_out <- qtl2pleio::boot_pvl(probs = genoprobs.1$`15`,
                     kinship = kinship$`15`,
                     start_snp = start,
                     n_snp = end - start + 1, 
-                    n_cores = 0, 
+                    n_cores = nc, 
                     pleio_peak_index = pp_index,
                     nboot_per_job = 400
                    )
