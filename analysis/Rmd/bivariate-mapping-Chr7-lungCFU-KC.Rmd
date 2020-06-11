@@ -21,11 +21,13 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r}
 load("../data/reduced_map_qtl2_mapping_objects.Rdata")
 kinship <- qtl2::calc_kinship(probs = genoprobs.1, type = "loco")
+nc <- 64
 ```
 
 
 ```{r}
 library(magrittr)
+library(ggplot2)
 ```
 
 
@@ -61,14 +63,14 @@ sp_out <- qtl2pleio::scan_pvl(probs = genoprobs.1$`7`,
                                 kinship = kinship$`7`,
                                 start_snp = start,
                                 n_snp = end - start + 1
-                                )
+                                n_cores = 64)
 (lrt <- qtl2pleio::calc_lrt_tib(sp_out))
 ```
 
 ```{r}
 sp_out %>%
   qtl2pleio::calc_profile_lods() %>%
-  qtl2pleio::add_pmap(pmap = map.1$`2`) %>%
+  qtl2pleio::add_pmap(pmap = map.1$`7`) %>%
   ggplot2::ggplot() + ggplot2::geom_line(ggplot2::aes(x = marker_position, y = profile_lod, colour = trait))
 ```
 
@@ -85,7 +87,8 @@ b_out <- qtl2pleio::boot_pvl(probs = genoprobs.1$`7`,
                     n_snp = end - start + 1, 
                     n_cores = nc, 
                     pleio_peak_index = pp_index,
-                    nboot_per_job = 400
+                    nboot_per_job = 400,
+		    n_cores = 64	
                    )
 (pvalue <- mean(b_out >= lrt))
 ```
