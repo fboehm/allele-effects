@@ -1,0 +1,105 @@
+---
+title: "Bivariate mappings for CC study"
+author: "Frederick J. Boehm"
+date: "3/23/2020"
+output: html_document
+---
+
+```{r setup2, include=FALSE, dev="CairoPNG"}
+.libPaths("~/work/libs")
+knitr::opts_chunk$set(dev="CairoPNG")
+```
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Read the csv files
+
+
+
+```{r}
+load("../data/reduced_map_qtl2_mapping_objects.Rdata")
+kinship <- qtl2::calc_kinship(probs = genoprobs.1, type = "loco")
+```
+
+```{r}
+phe <- as.matrix(cluster_traits[, c("greenyellow", "magenta")])
+rownames(phe) <- cluster_traits$X1
+start <- max(which(map.1$`10` < 20)) 
+end <- min(which(map.1$`10` > 45))
+```
+
+```{r}
+library(magrittr)
+library(ggplot2)
+```
+
+
+## Chr 2: SpleenCFU, SpleenCEQ, and IL10
+
+```{r}
+dat <- readr::read_csv("../data/pheno_clinical_4qtl2_win2_05OCT2019_v4.csv")
+phe <- as.matrix(dat[, c("spleenCFU", "spleenCEQ", "IL10")])
+rownames(phe) <- dat$X1
+start <- max(which(map.1$`2` < 80)) 
+end <- length(map.1$`2`)
+```
+
+
+```{r}
+sp_out <- qtl2pleio::scan_pvl(probs = genoprobs.1$`2`, 
+                                pheno = phe[, 2:3],
+                              addcovar = addcovar,
+                                kinship = kinship$`2`,
+                                start_snp = start,
+                                n_snp = end - start + 1, 
+                                n_cores = nc
+                                )
+(lrt <- qtl2pleio::calc_lrt_tib(sp_out))
+```
+
+```{r}
+sp_out %>%
+  qtl2pleio::calc_profile_lods() %>%
+  qtl2pleio::add_pmap(pmap = map.1$`2`) %>%
+  ggplot2::ggplot() + ggplot2::geom_line(ggplot2::aes(x = marker_position, y = profile_lod, colour = trait))
+```
+
+```{r}
+(pp_index <- qtl2pleio::find_pleio_peak_tib(tib = sp_out, 
+                                           start_snp = start
+                                           ))
+set.seed(3411192)
+b_out <- qtl2pleio::boot_pvl(probs = genoprobs.1$`2`, 
+                    pheno = phe[, 2:3],
+                    addcovar = addcovar,
+                    kinship = kinship$`2`,
+                    start_snp = start,
+                    n_snp = end - start + 1, 
+                    n_cores = nc, 
+                    pleio_peak_index = pp_index,
+                    nboot_per_job = 400
+                   )
+(pvalue <- mean(b_out >= lrt))
+```
+
+
+### Colophon
+
+This report was generated on `r Sys.time()` using the following computational environment and dependencies: 
+
+```{r colophon, cache = FALSE}
+# which R packages and versions?
+if ("devtools" %in% installed.packages()) devtools::session_info()
+```
+
+The current Git commit details are:
+
+```{r}
+# what commit is this file at? 
+if ("git2r" %in% installed.packages() & git2r::in_repository(path = ".")) git2r::repository(here::here())  
+```
+
+
