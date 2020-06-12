@@ -22,6 +22,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r}
 load("../data/reduced_map_qtl2_mapping_objects.Rdata")
 kinship <- qtl2::calc_kinship(probs = genoprobs.1, type = "loco")
+nc <- 32
 ```
 
 

@@ -19,13 +19,13 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r}
 cluster_traits <- readr::read_csv("../data/pheno_eigenscores_from_WGCNA_all60_win.csv")
-nc <- 64
 ```
 
 
 ```{r}
 load("../data/reduced_map_qtl2_mapping_objects.Rdata")
 kinship <- qtl2::calc_kinship(probs = genoprobs.1, type = "loco")
+nc <- 32
 ```
 
 ```{r}
