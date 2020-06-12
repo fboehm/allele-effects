@@ -75,6 +75,7 @@ b_out <- qtl2pleio::boot_pvl(probs = genoprobs.1$`10`,
                     nboot_per_job = 400
                    )
 (pvalue <- mean(b_out >= lrt))
+saveRDS(b_out, "../results/boot-WCGNA-traits.rds")
 ```
 
 
