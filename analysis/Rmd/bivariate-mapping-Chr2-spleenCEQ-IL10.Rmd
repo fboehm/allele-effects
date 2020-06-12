@@ -24,12 +24,6 @@ load("../data/reduced_map_qtl2_mapping_objects.Rdata")
 kinship <- qtl2::calc_kinship(probs = genoprobs.1, type = "loco")
 ```
 
-```{r}
-phe <- as.matrix(cluster_traits[, c("greenyellow", "magenta")])
-rownames(phe) <- cluster_traits$X1
-start <- max(which(map.1$`10` < 20)) 
-end <- min(which(map.1$`10` > 45))
-```
 
 ```{r}
 library(magrittr)
