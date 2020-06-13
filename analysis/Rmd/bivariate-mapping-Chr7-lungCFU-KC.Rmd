@@ -62,8 +62,8 @@ sp_out <- qtl2pleio::scan_pvl(probs = genoprobs.1$`7`,
                               addcovar = addcovar,
                                 kinship = kinship$`7`,
                                 start_snp = start,
-                                n_snp = end - start + 1
-                                n_cores = 64)
+                                n_snp = end - start + 1,
+                                n_cores = 32)
 (lrt <- qtl2pleio::calc_lrt_tib(sp_out))
 ```
 
@@ -80,15 +80,14 @@ sp_out %>%
                                            ))
 set.seed(3411192)
 b_out <- qtl2pleio::boot_pvl(probs = genoprobs.1$`7`, 
-                    pheno = phe[, 1:2],
+                    pheno = phe,
                     addcovar = addcovar,
                     kinship = kinship$`7`,
                     start_snp = start,
                     n_snp = end - start + 1, 
-                    n_cores = nc, 
+                    n_cores = 32, 
                     pleio_peak_index = pp_index,
-                    nboot_per_job = 400,
-		    n_cores = 64	
+                    nboot_per_job = 400
                    )
 (pvalue <- mean(b_out >= lrt))
 ```
