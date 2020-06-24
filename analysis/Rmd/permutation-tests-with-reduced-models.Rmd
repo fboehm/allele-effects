@@ -44,7 +44,7 @@ I anticipate that the former will have inflated type I error rate. How can I ver
 
 ## Simulation study
 
-Simulate 1000 traits for the CC mice
+Simulate traits for the CC mice
 
 ```{r}
 load("../data/reduced_map_qtl2_mapping_objects.Rdata")
