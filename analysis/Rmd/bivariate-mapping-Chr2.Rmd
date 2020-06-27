@@ -19,7 +19,6 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r}
 cluster_traits <- readr::read_csv("../data/pheno_eigenscores_from_WGCNA_all60_win.csv")
-nc <- 64
 ```
 
 
@@ -38,43 +37,6 @@ end <- min(which(map.1$`10` > 45))
 ```{r}
 library(magrittr)
 library(ggplot2)
-```
-
-## WCGNA traits 
-
-```{r}
-sp_out <- qtl2pleio::scan_pvl(probs = genoprobs.1$`10`, 
-                                pheno = phe,
-                                kinship = kinship$`10`,
-                                start_snp = start,
-                                n_snp = end - start + 1, 
-                                n_cores = nc
-                                )
-(lrt <- qtl2pleio::calc_lrt_tib(sp_out))
-```
-
-```{r}
-sp_out %>%
-  qtl2pleio::calc_profile_lods() %>%
-  qtl2pleio::add_pmap(pmap = map.1$`10`) %>%
-  ggplot2::ggplot() + ggplot2::geom_line(ggplot2::aes(x = marker_position, y = profile_lod, colour = trait))
-```
-
-```{r}
-(pp_index <- qtl2pleio::find_pleio_peak_tib(tib = sp_out, 
-                                           start_snp = start
-                                           ))
-set.seed(3411192)
-b_out <- qtl2pleio::boot_pvl(probs = genoprobs.1$`10`, 
-                    pheno = phe,
-                    kinship = kinship$`10`,
-                    start_snp = start,
-                    n_snp = end - start + 1, 
-                    n_cores = nc, 
-                    pleio_peak_index = pp_index,
-                    nboot_per_job = 400
-                   )
-(pvalue <- mean(b_out >= lrt))
 ```
 
 

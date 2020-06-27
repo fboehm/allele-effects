@@ -34,7 +34,7 @@ names(geno) <- stringr::str_split_fixed(fns, ".genotype.probs.Rdata", 2)[, 1]
 ```{r prior_M-define}
 ##### From GK example code
 # Specify allelic series prior
-# Suggested by Wes
+# Suggested by Wes Crouse
 # Influences how much prior weight it places on more or less complicated allelic series
 prior_M <- list(model.type = "crp", # crp - Chinese Restaurant Process
                 prior.alpha.type = "gamma",

@@ -7,7 +7,7 @@ output: github_document
 
 inferring founder allele effects at previously mapped QTL
 
-This is a collaborative project that involves Rick Baker, Clare Smith, me, and Chris Sassetti. My contribution is the TIMBR analyses.
+This is a collaborative project that involves Rick Baker, Clare Smith, me, and Chris Sassetti. My contribution is the TIMBR analyses and qtl2pleio analyses.
 
 
 
