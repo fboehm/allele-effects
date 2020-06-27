@@ -1,0 +1,41 @@
+---
+title: "BLUPs"
+author: "Frederick J. Boehm"
+date: "5/27/2020"
+output: html_document
+---
+
+
+I'm trying to understand the difference between the BLUP methods for inference of allele effects and 
+standard, generalized least squares methods. In the case of BLUPs, the allele effects 
+are treated as random effects. They have mean zero, and some positive variance. In `qtl2`, we assume that this 
+variance is proportional to a relatedness matrix, like a kinship matrix.
+
+In the case of standard estimation, via `qtl2::scan1coef`, the allele effects are treated as fixed effects. 
+
+One possible source of confusion is that the two model equations, i.e., that for fixed allele effects
+and that for random allele effects, are typically written to appear identical:
+
+$$
+y = X\beta + Zu + e
+$$
+
+where
+
+$$
+Zu \sim N(0, \sigma^2_gK)
+$$
+and is independent of normally distributed errors, $e$.
+
+
+Importantly, the dimensions of the X and Z matrices differ for the two models.
+
+
+
+In the fixed allele effects case (ignoring additive covariates), the founder allele dosages matrix (with dimensions n by 8) *is* the X matrix. The Z matrix, then, is just a n by 1 matrix of 1's.
+
+In the case of random allele effects (again, ignoring additive covariates), the founder allele dosages matrix (n by 8) *is* the Z matrix. The X matrix, then, is a n by 1 matrix of 1s. 
+
+
+
+
