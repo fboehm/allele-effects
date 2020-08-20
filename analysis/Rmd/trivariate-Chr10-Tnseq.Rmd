@@ -24,7 +24,6 @@ Let's first univariately map each trait.
 
 ```{r}
 cluster_traits <- readr::read_csv("../data/pheno_eigenscores_from_WGCNA_all60_win.csv")
-nc <- 32
 ```
 
 
@@ -56,12 +55,12 @@ end <- min(which(map.1$`10` > 45))
 ## Trivariate analysis 
 
 ```{r}
+future::plan("multiprocess")
 sp_out <- qtl2pleio::scan_pvl(probs = genoprobs.1$`10`, 
                                 pheno = phe,
                                 kinship = kinship$`10`,
                                 start_snp = start,
-                                n_snp = end - start + 1, 
-                                n_cores = parallel::detectCores()
+                                n_snp = end - start + 1 
                                 )
 (lrt <- qtl2pleio::calc_lrt_tib(sp_out))
 ```
@@ -83,7 +82,6 @@ b_out <- qtl2pleio::boot_pvl(probs = genoprobs.1$`10`,
                     kinship = kinship$`10`,
                     start_snp = start,
                     n_snp = end - start + 1, 
-                    n_cores = nc, 
                     pleio_peak_index = pp_index,
                     nboot_per_job = 400
                    )
