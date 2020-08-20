@@ -71,7 +71,7 @@ sp_out %>%
   ggplot2::ggplot() + ggplot2::geom_line(ggplot2::aes(x = marker_position, y = profile_lod, colour = trait))
 ```
 
-```{r, eval = FALSE}
+```{r, eval = TRUE}
 (pp_index <- qtl2pleio::find_pleio_peak_tib(tib = sp_out, 
                                            start_snp = start
                                            ))
