@@ -55,7 +55,6 @@ end <- min(which(map.1$`10` > 45))
 ## Trivariate analysis 
 
 ```{r}
-future::plan("multiprocess")
 sp_out <- qtl2pleio::scan_pvl(probs = genoprobs.1$`10`, 
                                 pheno = phe,
                                 kinship = kinship$`10`,
@@ -72,7 +71,7 @@ sp_out %>%
   ggplot2::ggplot() + ggplot2::geom_line(ggplot2::aes(x = marker_position, y = profile_lod, colour = trait))
 ```
 
-```{r}
+```{r, eval = FALSE}
 (pp_index <- qtl2pleio::find_pleio_peak_tib(tib = sp_out, 
                                            start_snp = start
                                            ))
