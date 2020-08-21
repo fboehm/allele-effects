@@ -85,10 +85,10 @@ b_out <- qtl2pleio::boot_pvl(probs = genoprobs.1$`10`,
                     start_snp = start,
                     n_snp = end - start + 1, 
                     pleio_peak_index = pp_index,
-                    nboot_per_job = 400
+                    nboot = 400
                    )
 (pvalue <- mean(b_out >= lrt))
-saveRDS(b_out, "../results/boot-WCGNA-traits.rds")
+saveRDS(b_out, "../results/trivariate-Chr10-Tnseq-futures-boot.rds")
 ```
 
 
