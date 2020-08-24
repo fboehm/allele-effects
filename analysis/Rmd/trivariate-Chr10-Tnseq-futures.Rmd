@@ -55,12 +55,17 @@ end <- min(which(map.1$`10` > 45))
 ## Trivariate analysis 
 
 ```{r}
-sp_out <- qtl2pleio::scan_pvl(probs = genoprobs.1$`10`, 
+fn <- "../data/trivariate-Chr10.rds"
+
+if (!file.exists(fn)){
+  sp_out <- qtl2pleio::scan_pvl(probs = genoprobs.1$`10`, 
                                 pheno = phe,
                                 kinship = kinship$`10`,
                                 start_snp = start,
                                 n_snp = end - start + 1 
                                 )
+
+} else {sp_out <- readRDS(fn)}
 (lrt <- qtl2pleio::calc_lrt_tib(sp_out))
 ```
 
@@ -78,8 +83,11 @@ sp_out %>%
 library(future.batchtools)
 library(future)
 plan("batchtools_lsf")
+#plan("multiprocess")
 set.seed(3411192)
-b_out <- qtl2pleio::boot_pvl(probs = genoprobs.1$`10`, 
+bfn <- "../data/trivariate-Chr10-Tnseq-futures-boot.rds"
+if (!file.exists(bfn)){
+  b_out <- qtl2pleio::boot_pvl(probs = genoprobs.1$`10`, 
                     pheno = phe,
                     kinship = kinship$`10`,
                     start_snp = start,
@@ -87,8 +95,11 @@ b_out <- qtl2pleio::boot_pvl(probs = genoprobs.1$`10`,
                     pleio_peak_index = pp_index,
                     nboot = 400
                    )
+  saveRDS(b_out, bfn)
+} else {
+  b_out <- readRDS(bfn)
+}
 (pvalue <- mean(b_out >= lrt))
-saveRDS(b_out, "../results/trivariate-Chr10-Tnseq-futures-boot.rds")
 ```
 
 
