@@ -56,6 +56,14 @@ start <- 1
 end <- max(which(map.1$`7` < 30)) 
 ```
 
+```{r, lsf}
+library(future.batchtools)
+library(future)
+plan("batchtools_lsf")
+```
+
+
+
 ```{r}
 sp_out <- qtl2pleio::scan_pvl(probs = genoprobs.1$`7`, 
                                 pheno = phe,
