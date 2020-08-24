@@ -55,6 +55,13 @@ end <- min(which(map.1$`10` > 45))
 ## Trivariate analysis 
 
 ```{r}
+library(future.batchtools)
+library(future)
+plan("batchtools_lsf")
+#plan("multiprocess")
+```
+
+```{r, scanpvl}
 fn <- "../data/trivariate-Chr10.rds"
 
 if (!file.exists(fn)){
@@ -69,21 +76,17 @@ if (!file.exists(fn)){
 (lrt <- qtl2pleio::calc_lrt_tib(sp_out))
 ```
 
-```{r}
+```{r, plot}
 sp_out %>%
   qtl2pleio::calc_profile_lods() %>%
   qtl2pleio::add_pmap(pmap = map.1$`10`) %>%
   ggplot2::ggplot() + ggplot2::geom_line(ggplot2::aes(x = marker_position, y = profile_lod, colour = trait))
 ```
 
-```{r, eval = TRUE}
+```{r, bootpvl, eval = TRUE}
 (pp_index <- qtl2pleio::find_pleio_peak_tib(tib = sp_out, 
                                            start_snp = start
                                            ))
-library(future.batchtools)
-library(future)
-plan("batchtools_lsf")
-#plan("multiprocess")
 set.seed(3411192)
 bfn <- "../data/trivariate-Chr10-Tnseq-futures-boot.rds"
 if (!file.exists(bfn)){
@@ -114,7 +117,7 @@ if ("devtools" %in% installed.packages()) devtools::session_info()
 
 The current Git commit details are:
 
-```{r}
+```{r, git}
 # what commit is this file at? 
 if ("git2r" %in% installed.packages() & git2r::in_repository(path = ".")) git2r::repository(here::here())  
 ```
