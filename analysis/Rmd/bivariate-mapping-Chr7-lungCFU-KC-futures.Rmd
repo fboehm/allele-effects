@@ -1,0 +1,93 @@
+---
+title: "Bivariate mappings for CC study: Chr 7 KC and lungCFU"
+author: "Frederick J. Boehm"
+date: "3/23/2020"
+output: html_document
+---
+
+```{r setup2, include=FALSE, dev="CairoPNG"}
+knitr::opts_chunk$set(dev="CairoPNG")
+```
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Read the files
+
+
+
+```{r}
+load("../data/reduced_map_qtl2_mapping_objects.Rdata")
+kinship <- qtl2::calc_kinship(probs = genoprobs.1, type = "loco")
+nc <- 64
+```
+
+
+```{r}
+library(magrittr)
+library(ggplot2)
+```
+
+
+
+## Chr 7: KC, lung CFU
+
+```{r}
+dat <- readr::read_csv("../data/pheno_clinical_4qtl2_win2_05OCT2019_v4.csv")
+dmat <- as.matrix(dat[, -1])
+rownames(dmat) <- dat$X1
+```
+
+```{r}
+sout <- qtl2::scan1(genoprobs = genoprobs.1, pheno = dmat, kinship = kinship, addcovar = addcovar)
+qtl2::find_peaks(sout, map.1, threshold = 6) %>%
+  dplyr::arrange(chr)
+# KC peak: 20, lungCFU peak: 16
+```
+
+
+
+```{r}
+phe <- as.matrix(dat[, c("KC", "lungCFU")])
+rownames(phe) <- dat$X1
+start <- 1
+end <- max(which(map.1$`7` < 30)) 
+```
+
+```{r}
+sp_out <- qtl2pleio::scan_pvl(probs = genoprobs.1$`7`, 
+                                pheno = phe,
+                              addcovar = addcovar,
+                                kinship = kinship$`7`,
+                                start_snp = start,
+                                n_snp = end - start + 1)
+(lrt <- qtl2pleio::calc_lrt_tib(sp_out))
+```
+
+```{r}
+sp_out %>%
+  qtl2pleio::calc_profile_lods() %>%
+  qtl2pleio::add_pmap(pmap = map.1$`7`) %>%
+  ggplot2::ggplot() + ggplot2::geom_line(ggplot2::aes(x = marker_position, y = profile_lod, colour = trait))
+```
+
+
+### Colophon
+
+This report was generated on `r Sys.time()` using the following computational environment and dependencies: 
+
+```{r colophon, cache = FALSE}
+# which R packages and versions?
+if ("devtools" %in% installed.packages()) devtools::session_info()
+```
+
+The current Git commit details are:
+
+```{r}
+# what commit is this file at? 
+if ("git2r" %in% installed.packages() & git2r::in_repository(path = ".")) git2r::repository(here::here())  
+```
+
+
