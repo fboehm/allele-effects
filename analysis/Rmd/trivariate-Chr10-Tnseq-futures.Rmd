@@ -57,8 +57,7 @@ end <- min(which(map.1$`10` > 45))
 ```{r}
 library(future.batchtools)
 library(future)
-#plan("batchtools_lsf")
-plan("multiprocess")
+plan("batchtools_multicore")
 ```
 
 ```{r, scanpvl}
