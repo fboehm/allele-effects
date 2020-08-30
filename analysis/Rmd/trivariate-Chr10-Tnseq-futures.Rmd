@@ -57,7 +57,8 @@ end <- min(which(map.1$`10` > 45))
 ```{r}
 library(future.batchtools)
 library(future)
-plan("batchtools_multicore")
+options(future.globals.maxSize= 4 * 1024 ^ 3)
+plan("batch_multicore")
 ```
 
 ```{r, scanpvl}
