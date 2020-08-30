@@ -58,7 +58,6 @@ end <- min(which(map.1$`10` > 45))
 library(future.batchtools)
 library(future)
 options(future.globals.maxSize= 4 * 1024 ^ 3)
-#plan("batchtools_lsf")
 plan("multiprocess")
 ```
 
