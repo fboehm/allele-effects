@@ -59,7 +59,7 @@ end <- max(which(map.1$`7` < 30))
 ```{r, lsf}
 library(future.batchtools)
 library(future)
-plan("batchtools_lsf")
+plan("batchtools_multicore")
 ```
 
 
