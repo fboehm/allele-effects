@@ -28,7 +28,7 @@ kinship <- qtl2::calc_kinship(probs = genoprobs.1, type = "loco")
 ```
 
 ```{r}
-phe <- as.matrix(cluster_traits[, c("greenyellow", "magenta")])
+phe <- as.matrix(cluster_traits[, c("greenyellow", "grey60")])
 rownames(phe) <- cluster_traits$X1
 start <- max(which(map.1$`10` < 20)) 
 end <- min(which(map.1$`10` > 45))
@@ -69,7 +69,7 @@ sp_out %>%
 ```
 
 ```{r}
-bfn <- "../data/bivariate-greenyellow-magenta-Chr10-boot.rds"
+bfn <- "../data/bivariate-greenyellow-grey60-Chr10-boot.rds"
 
 if (!file.exists(bfn)){
   (pp_index <- qtl2pleio::find_pleio_peak_tib(tib = sp_out, 
