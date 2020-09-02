@@ -6,7 +6,6 @@ output: html_document
 ---
 
 ```{r setup2, include=FALSE, dev="CairoPNG"}
-.libPaths("~/work/libs")
 knitr::opts_chunk$set(dev="CairoPNG")
 ```
 
