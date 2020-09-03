@@ -2,9 +2,9 @@
 #BSUB -o %J.out 
 #BSUB -e %J.err 
 #BSUB -N
-#BSUB -W 100:00
-#BSUB -n 30
-#BSUB -R rusage[mem=8000]
+#BSUB -W 200:00
+#BSUB -n 1
+#BSUB -R rusage[mem=32000]
 #BSUB -M 48000
 #BSUB -R span[hosts=1]
 
@@ -13,7 +13,7 @@ module load libpng/1.6.8
 module load pandoc/2.7.2
 module load R/4.0.0_gcc
 module load cairo/1.12.16
-Rscript -e 'rmarkdown::render("../Rmd/bivariate-mapping-magenta-grey60-Chr10.Rmd")'
+Rscript -e 'rmarkdown::render("../Rmd/trivariate-Chr10-Tnseq.Rmd")'
 
 
 
