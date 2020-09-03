@@ -44,7 +44,7 @@ library(ggplot2)
 library(future.batchtools)
 library(future)
 options(future.globals.maxSize= 4 * 1024 ^ 3)
-plan("batchtools_multicore")
+plan("batchtools_lsf")
 ```
 
 
