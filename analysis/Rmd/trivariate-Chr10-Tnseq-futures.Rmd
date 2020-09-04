@@ -54,12 +54,7 @@ end <- min(which(map.1$`10` > 45))
 
 ## Trivariate analysis 
 
-```{r}
-library(future.batchtools)
-library(future)
-options(future.globals.maxSize= 4 * 1024 ^ 3)
-plan("batch_multicore")
-```
+
 
 ```{r, scanpvl}
 fn <- "../data/trivariate-Chr10.rds"
@@ -71,6 +66,7 @@ if (!file.exists(fn)){
                                 start_snp = start,
                                 n_snp = end - start + 1 
                                 )
+  saveRDS(sp_out, file = fn)
 
 } else {sp_out <- readRDS(fn)}
 (lrt <- qtl2pleio::calc_lrt_tib(sp_out))
@@ -82,6 +78,19 @@ sp_out %>%
   qtl2pleio::add_pmap(pmap = map.1$`10`) %>%
   ggplot2::ggplot() + ggplot2::geom_line(ggplot2::aes(x = marker_position, y = profile_lod, colour = trait))
 ```
+
+
+```{r, future_setup}
+library(future.batchtools)
+library(future)
+options(future.globals.maxSize= 4 * 1024 ^ 3)
+#plan(list(tweak(batchtools_lsf, template = "~/.lsf.tmpl"), 
+#          multiprocess)
+#     )
+plan(batchtools_multicore, workers = 64)
+```
+
+
 
 ```{r, bootpvl, eval = TRUE}
 (pp_index <- qtl2pleio::find_pleio_peak_tib(tib = sp_out, 
