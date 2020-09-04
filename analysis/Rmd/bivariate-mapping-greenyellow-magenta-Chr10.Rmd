@@ -53,6 +53,7 @@ if (!file.exists(spfn)){
                                 start_snp = start,
                                 n_snp = end - start + 1
                                 )
+  saveRDS(sp_out, file = spfn)
 
 } else {sp_out <- readRDS(spfn)}
 (lrt <- qtl2pleio::calc_lrt_tib(sp_out))
