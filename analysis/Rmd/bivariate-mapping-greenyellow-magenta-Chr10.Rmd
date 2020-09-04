@@ -45,12 +45,16 @@ library(ggplot2)
 
 
 ```{r, scan_pvl}
-sp_out <- qtl2pleio::scan_pvl(probs = genoprobs.1$`10`, 
+spfn <- "../data/bivariate-greenyellow-magenta-Chr10.rds"
+if (!file.exists(spfn)){
+  sp_out <- qtl2pleio::scan_pvl(probs = genoprobs.1$`10`, 
                                 pheno = phe,
                                 kinship = kinship$`10`,
                                 start_snp = start,
                                 n_snp = end - start + 1
                                 )
+
+} else {sp_out <- readRDS(spfn)}
 (lrt <- qtl2pleio::calc_lrt_tib(sp_out))
 ```
 
