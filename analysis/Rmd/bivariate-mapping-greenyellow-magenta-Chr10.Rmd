@@ -95,7 +95,7 @@ if (!file.exists(bfn)){
                       pleio_peak_index = pp_index,
                       nboot = 400
                      )
-  (pvalue <- mean(b_out >= lrt))
+  saveRDS(b_out, file = bfn)
 } else {b_out <- readRDS(bfn)}
 (pvalue <- mean(b_out >= lrt))
 ```
