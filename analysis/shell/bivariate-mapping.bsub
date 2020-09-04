@@ -2,7 +2,7 @@
 #BSUB -o %J.out 
 #BSUB -e %J.err 
 #BSUB -N
-#BSUB -W 100:00
+#BSUB -W 6:00
 #BSUB -n 32
 #BSUB -R rusage[mem=1000]
 #BSUB -R span[hosts=1]
@@ -12,7 +12,7 @@ module load libpng/1.6.8
 module load pandoc/2.7.2
 module load R/4.0.0_gcc
 module load cairo/1.12.16
-Rscript -e 'rmarkdown::render("../Rmd/bivariate-mapping-greenyellow-magenta-Chr10.Rmd")'
+Rscript -e 'rmarkdown::render("../Rmd/bivariate-mapping-greenyellow-grey60-Chr10.Rmd")'
 
 
 
