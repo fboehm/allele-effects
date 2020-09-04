@@ -40,17 +40,19 @@ library(ggplot2)
 
 ## WCGNA traits 
 
-```{r}
+```{r, future_setup}
 library(future.batchtools)
 library(future)
 options(future.globals.maxSize= 4 * 1024 ^ 3)
-plan("batchtools_lsf", template = "~/.lsf.tmpl")
+plan(list(tweak(batchtools_lsf, template = "~/.lsf.tmpl"), 
+          multiprocess)
+     )
 ```
 
 
 
 
-```{r}
+```{r, scan_pvl}
 sp_out <- qtl2pleio::scan_pvl(probs = genoprobs.1$`10`, 
                                 pheno = phe,
                                 kinship = kinship$`10`,
@@ -60,14 +62,14 @@ sp_out <- qtl2pleio::scan_pvl(probs = genoprobs.1$`10`,
 (lrt <- qtl2pleio::calc_lrt_tib(sp_out))
 ```
 
-```{r}
+```{r, plot}
 sp_out %>%
   qtl2pleio::calc_profile_lods() %>%
   qtl2pleio::add_pmap(pmap = map.1$`10`) %>%
   ggplot2::ggplot() + ggplot2::geom_line(ggplot2::aes(x = marker_position, y = profile_lod, colour = trait))
 ```
 
-```{r}
+```{r, boot}
 bfn <- "../data/bivariate-greenyellow-magenta-Chr10-boot.rds"
 
 if (!file.exists(bfn)){
