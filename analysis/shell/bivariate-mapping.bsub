@@ -4,7 +4,7 @@
 #BSUB -N
 #BSUB -W 1:00
 #BSUB -n 2
-#BSUB -R rusage[mem=8000]
+#BSUB -R rusage[mem=4000]
 #BSUB -R span[hosts=1]
 
 module load gcc/8.1.0
