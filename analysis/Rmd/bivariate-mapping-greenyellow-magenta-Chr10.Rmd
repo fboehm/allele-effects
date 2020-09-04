@@ -40,14 +40,6 @@ library(ggplot2)
 
 ## WCGNA traits 
 
-```{r, future_setup}
-library(future.batchtools)
-library(future)
-options(future.globals.maxSize= 4 * 1024 ^ 3)
-plan(list(tweak(batchtools_lsf, template = "~/.lsf.tmpl"), 
-          multiprocess)
-     )
-```
 
 
 
@@ -68,6 +60,19 @@ sp_out %>%
   qtl2pleio::add_pmap(pmap = map.1$`10`) %>%
   ggplot2::ggplot() + ggplot2::geom_line(ggplot2::aes(x = marker_position, y = profile_lod, colour = trait))
 ```
+
+
+
+```{r, future_setup}
+library(future.batchtools)
+library(future)
+options(future.globals.maxSize= 4 * 1024 ^ 3)
+plan(list(tweak(batchtools_lsf, template = "~/.lsf.tmpl"), 
+          multiprocess)
+     )
+```
+
+
 
 ```{r, boot}
 bfn <- "../data/bivariate-greenyellow-magenta-Chr10-boot.rds"
