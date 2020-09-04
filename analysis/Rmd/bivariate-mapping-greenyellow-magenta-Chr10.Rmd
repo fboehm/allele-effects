@@ -72,9 +72,10 @@ sp_out %>%
 library(future.batchtools)
 library(future)
 options(future.globals.maxSize= 4 * 1024 ^ 3)
-plan(list(tweak(batchtools_lsf, template = "~/.lsf.tmpl"), 
-          multiprocess)
-     )
+#plan(list(tweak(batchtools_lsf, template = "~/.lsf.tmpl"), 
+#          multiprocess)
+#     )
+plan(batchtools_multicore, workers = 2)
 ```
 
 
