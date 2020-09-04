@@ -40,14 +40,6 @@ library(ggplot2)
 
 ## WCGNA traits 
 
-```{r}
-library(future.batchtools)
-library(future)
-options(future.globals.maxSize= 4 * 1024 ^ 3)
-plan("batchtools_multicore")
-```
-
-
 
 
 ```{r}
@@ -67,6 +59,19 @@ sp_out %>%
   ggplot2::ggplot() + ggplot2::geom_line(ggplot2::aes(x = marker_position, y = profile_lod, colour = trait))
 ```
 
+
+
+
+```{r, future_setup}
+library(future.batchtools)
+library(future)
+options(future.globals.maxSize= 4 * 1024 ^ 3)
+plan(batchtools_multicore, workers = 32)
+```
+
+
+
+
 ```{r}
 bfn <- "../data/bivariate-magenta-grey60-Chr10-boot.rds"
 
@@ -83,7 +88,7 @@ if (!file.exists(bfn)){
                       pleio_peak_index = pp_index,
                       nboot = 400
                      )
-  (pvalue <- mean(b_out >= lrt))
+  saveRDS(b_out, file = bfn)
 } else {b_out <- readRDS(bfn)}
 (pvalue <- mean(b_out >= lrt))
 ```
