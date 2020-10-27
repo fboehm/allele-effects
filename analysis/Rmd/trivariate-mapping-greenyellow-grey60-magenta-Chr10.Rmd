@@ -10,8 +10,9 @@ knitr::opts_chunk$set(dev="CairoPNG")
 ```
 
 
-```{r setup, include=FALSE}
+```{r setup, include=TRUE}
 knitr::opts_chunk$set(echo = TRUE)
+nc <- 32
 ```
 
 ## Read the csv files
@@ -83,7 +84,7 @@ if (!file.exists(bfn)){
                       start_snp = start,
                       n_snp = end - start + 1, 
                       pleio_peak_index = pp_index,
-                      nboot = 400
+                      nboot = 400, cores = 32
                      )
   (pvalue <- mean(b_out >= lrt))
   saveRDS(b_out, file = bfn)
