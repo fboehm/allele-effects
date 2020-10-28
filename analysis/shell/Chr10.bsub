@@ -2,9 +2,9 @@
 #BSUB -o %J.out 
 #BSUB -e %J.err 
 #BSUB -N
-#BSUB -W 240:00
+#BSUB -W 192:00
 #BSUB -n 32
-#BSUB -R rusage[mem=4000]
+#BSUB -R rusage[mem=5000]
 #BSUB -R span[hosts=1]
 
 module load gcc/8.1.0
