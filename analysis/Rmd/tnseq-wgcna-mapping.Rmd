@@ -1,0 +1,120 @@
+---
+title: "QTL mapping for Tnseq WCGNA traits"
+output: 
+  html_document: 
+    code_folding: hide
+params:
+  lastmod: !r lubridate::now()
+---
+
+```{r setup2, include=FALSE, dev="CairoPNG"}
+knitr::opts_chunk$set(dev="CairoPNG")
+```
+
+
+
+Last knitted: `r params$lastmod`.
+
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+nc <- 32
+```
+
+## Overview
+
+We want to find the QTL peaks for the WGCNA traits that Rick Baker determined. 
+
+Once we have those peaks, we'll use TIMBR at each peak to get the allelic series.
+
+We'll also look at genotype probabilities (at QTL peak position) per mouse line.
+
+We'll look at the patterns of genotype probabilities among mouse lines in each cluster, where the clusters are defined as in Clare's preprint. In short, there are six clusters and 
+we want to see if there are distinct immunological responses for the different clusters.
+
+## Step 1: map the Tnseq WGCNA traits
+
+```{r}
+library(magrittr)
+```
+
+
+```{r}
+load("../data/reduced_map_qtl2_mapping_objects.Rdata")
+pheno <- readr::read_csv("../data/pheno_eigenscores_from_WGCNA_all60_win.csv") %>%
+  dplyr::rename(mouse_line = X1)
+
+pheno_matrix <- as.matrix(pheno[, -1])
+rownames(pheno_matrix) <- pheno$mouse_line
+```
+
+```{r}
+kinship <- qtl2::calc_kinship(probs = genoprobs.1, type = "loco", cores = nc)
+s1 <- qtl2::scan1(genoprobs = genoprobs.1, pheno = pheno_mat, kinship = kinship, reml = TRUE, cores = nc)
+```
+
+```{r}
+peaks <- qtl2::find_peaks(scan1_output = s1, map = map.1, peakdrop = 1.5, prob = 0.95, cores = nc, threshold = 6) %>%
+  tibble::as_tibble()
+```
+
+## Step 2: TIMBR at QTL peak positions
+
+
+
+
+```{r}
+gp <- readRDS("../data/cc36.rds")
+```
+```{r TIMBR-setup}
+mapdf <- qtl2convert::map_list_to_df(map.1)
+fn <- "../data/cc-tnseq-modules-timbr.rds"
+if (!file.exists(fn)){
+  prior_M1 <- list(model.type = "crp", # crp - Chinese Restaurant Process
+                  prior.alpha.type = "gamma",
+                  prior.alpha.shape = 1,
+                  prior.alpha.rate = 2.333415)
+  prior_M2 <- list(model.type = "crp",
+                  prior.alpha.type = "gamma",
+                  prior.alpha.shape = 2.3009322,
+                  prior.alpha.rate = 0.7488104
+                  )
+  library(TIMBR)
+  data(mcv.data) # get A matrix
+  set.seed(3411192) # to ensure getting the same samples with TIMBR
+  t_out_peaks <- peaks %>%
+    dplyr::mutate(marker_index = purrr::map2_int(.x = pos, .y = chr, .f = function(x, y){
+      pp <- mapdf %>%
+        dplyr::filter(chr == y, x == pos) %>%
+        dplyr::select(pos) %>%
+        unlist()
+      # some markers have identical map positions
+      return(which(map.1[[y]] == pp[1])[1]) 
+      })) %>%
+    dplyr::filter(chr != "X") %>% # No TIMBR for X chr yet!
+    dplyr::filter(lod >= 6) %>%
+    dplyr::mutate(timbr = purrr::pmap(.l = list(lodcolumn, chr, marker_index), 
+                                      .f = function(lodcolumn, chr, marker_index){
+                                        qtl2tb::run_timbr(lodcolumn, 
+                                                          chr, 
+                                                          marker_index, 
+                                                          gp,
+                                                          pheno = pheno_matrix[, lodcolumn, drop = FALSE],
+                                                          addcovar = NULL)
+                                      }
+                          ))
+  rm(gp)
+  saveRDS(t_out_peaks, fn)
+} else {
+  t_out_peaks <- readRDS(fn)
+}
+```
+
+I need to write a function that pulls the genotype probabilities object for each
+QTL peak position. 
+
+
