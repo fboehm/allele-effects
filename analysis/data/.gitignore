@@ -1,5 +1,4 @@
 36-state-genotypes*
-*.csv
 *.rds
 *.zip
 cluster_assignments.xlsx
