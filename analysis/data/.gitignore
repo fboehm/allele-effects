@@ -1,7 +1,6 @@
 36-state-genotypes*
 *.csv
 *.rds
-*.Rdata
 *.zip
 cluster_assignments.xlsx
 TIMBR_for_clinical_v4_M1_Z.RData
