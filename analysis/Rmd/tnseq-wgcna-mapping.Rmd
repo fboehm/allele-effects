@@ -4,7 +4,7 @@ output:
   html_document: 
     code_folding: hide
 params:
-  lastmod: !r lubridate::now()
+  lastmod: !r clock::zoned_now("America/New_York")
 ---
 
 ```{r setup2, include=FALSE, dev="CairoPNG"}
@@ -54,7 +54,7 @@ rownames(pheno_matrix) <- pheno$mouse_line
 
 ```{r}
 kinship <- qtl2::calc_kinship(probs = genoprobs.1, type = "loco", cores = nc)
-s1 <- qtl2::scan1(genoprobs = genoprobs.1, pheno = pheno_mat, kinship = kinship, reml = TRUE, cores = nc)
+s1 <- qtl2::scan1(genoprobs = genoprobs.1, pheno = pheno_matrix, kinship = kinship, reml = TRUE, cores = nc)
 ```
 
 ```{r}
