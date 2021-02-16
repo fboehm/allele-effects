@@ -1,0 +1,102 @@
+```{r}
+peaks <- qtl2::find_peaks(scan1_output = s1, map = map.1, peakdrop = 1.5, prob = 0.95, cores = nc, threshold = 6) %>%
+  tibble::as_tibble()
+```
+
+## Step 2: TIMBR at QTL peak positions
+
+
+
+
+```{r}
+gp <- readRDS("../data/cc36.rds")
+```
+
+
+```{r}
+mapdf <- qtl2convert::map_list_to_df(map.1)
+if (!file.exists(fn)){
+  prior_M1 <- list(model.type = "crp", # crp - Chinese Restaurant Process
+                  prior.alpha.type = "gamma",
+                  prior.alpha.shape = 1,
+                  prior.alpha.rate = 2.333415)
+  prior_M2 <- list(model.type = "crp",
+                  prior.alpha.type = "gamma",
+                  prior.alpha.shape = 2.3009322,
+                  prior.alpha.rate = 0.7488104
+                  )
+  library(TIMBR)
+  data(mcv.data) # get A matrix
+  set.seed(3411192) # to ensure getting the same samples with TIMBR
+  t_out_peaks <- peaks %>%
+    dplyr::mutate(marker_index = purrr::map2_int(.x = pos, .y = chr, .f = function(x, y){
+      pp <- mapdf %>%
+        dplyr::filter(chr == y, x == pos) %>%
+        dplyr::select(pos) %>%
+        unlist()
+      # some markers have identical map positions
+      return(which(map.1[[y]] == pp[1])[1]) 
+      })) %>%
+    dplyr::filter(chr != "X") %>% # No TIMBR for X chr yet!
+    dplyr::filter(lod >= 6) %>%
+    dplyr::mutate(timbr = purrr::pmap(.l = list(lodcolumn, chr, marker_index), 
+                                      .f = function(lodcolumn, chr, marker_index){
+                                        qtl2tb::run_timbr(lodcolumn, 
+                                                          chr, 
+                                                          marker_index, 
+                                                          gp,
+                                                          pheno = pheno_matrix[, lodcolumn, drop = FALSE],
+                                                          addcovar = NULL)
+                                      }
+                          ))
+  rm(gp)
+  saveRDS(t_out_peaks, fn)
+} else {
+  t_out_peaks <- readRDS(fn)
+}
+```
+
+I need to write a function that pulls the genotype probabilities matrix for each
+QTL peak position. I already have the peak index column, so let's use it!
+
+```{r}
+# read in cluster memberships
+cluster_assignments <- readr::read_csv("../clusters/cluster-assignments.csv")
+t2 <- t_out_peaks %>% 
+  dplyr::mutate(peak_allele_probs = purrr::map2(.x = chr, 
+                                                .y = marker_index, 
+                                                .f = function(x, y){
+    genoprobs.1[[x]][ , , y]
+  })) %>%
+  dplyr::mutate(peak_geno_table = purrr::map(.x = peak_allele_probs, .f = function(x){
+    apply(X = x, MARGIN = 1, FUN = function(x){LETTERS[which.max(x)]})
+  })) %>% 
+  # look at TIMBR results
+  dplyr::mutate(most_probable_series = purrr::map_chr(.x = timbr, 
+                                                      .f = function(x)names(x$p.M.given.y[1])), 
+                most_probable_series_prob = purrr::map_dbl(.x = timbr, 
+                                                           .f = function(x)x$p.M.given.y[1]),
+                second_most_probable_series = purrr::map_chr(.x = timbr, 
+                                                      .f = function(x)names(x$p.M.given.y[2])), 
+                second_most_probable_series_prob = purrr::map_dbl(.x = timbr, 
+                                                           .f = function(x)x$p.M.given.y[2])) %>%
+  dplyr::mutate(collapsible_series = purrr::map2_chr(.x = most_probable_series, .y = second_most_probable_series, .f = function(x, y){
+      if (x != "0,0,0,0,0,0,0,0") {out <- x} else {out <- y}
+      return(out)
+    })) %>%
+  dplyr::mutate(peak_geno_table_reduced = purrr::map2(.x = peak_geno_table, .y = collapsible_series, .f = function(x, y){
+    # split collapsible_series
+    series_splitted <- stringr::str_split(string = y, pattern = ",")[[1]]
+    names(series_splitted) <- LETTERS[1:8]
+    tibble::tibble(x) %>%
+      dplyr::rename(founder_allele = x) %>%
+      dplyr::mutate(mouse_line = names(x)) %>%
+      dplyr::mutate(allele_reduced = purrr::map_chr(.x = founder_allele, .f = function(founder){
+        series_splitted[which(names(series_splitted) == founder)]
+      })) %>%
+      dplyr::select(mouse_line, founder_allele, allele_reduced) %>%
+      dplyr::mutate(mouse_line = stringr::str_remove(string = mouse_line, pattern = "cs")) %>%
+      dplyr::left_join(y = cluster_assignments, by = c("mouse_line" = "line")) %>%
+      dplyr::arrange(cluster)
+  })) 
+```
