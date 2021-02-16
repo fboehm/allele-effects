@@ -81,7 +81,7 @@ rownames(pheno_matrix) <- pheno$mouse_line
 ```
 
 ```{r}
-s1 <- qtl2::scan1(genoprobs = genoprobs.1, pheno = pheno_matrix, kinship = kinship, reml = TRUE, cores = nc)
+s1 <- qtl2::scan1(genoprobs = genoprobs.1, pheno = pheno_matrix, addcovar = addcovar, kinship = kinship, reml = TRUE, cores = nc)
 fn <- "../data/cc-clinical-timbr.rds"
 ```
 

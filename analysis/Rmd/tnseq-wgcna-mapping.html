@@ -204,7 +204,7 @@ summary {
 </div>
 
 
-<p>Last knitted: 2021-02-16 13:37:51.686204830-05:00[America/New_York].</p>
+<p>Last knitted: 2021-02-16 13:55:51.901331302-05:00[America/New_York].</p>
 <pre class="r"><code>#nc &lt;- 32
 nc &lt;- 2</code></pre>
 <div id="overview" class="section level2">
@@ -341,7 +341,7 @@ cluster_assignments &lt;- readr::read_csv(&quot;../clusters/cluster-assignments.
 ## ℹ Use `spec()` for the full column specifications.</code></pre>
 <pre class="r"><code>pheno_matrix &lt;- as.matrix(pheno[, -1])
 rownames(pheno_matrix) &lt;- pheno$mouse_line</code></pre>
-<pre class="r"><code>s1 &lt;- qtl2::scan1(genoprobs = genoprobs.1, pheno = pheno_matrix, kinship = kinship, reml = TRUE, cores = nc)
+<pre class="r"><code>s1 &lt;- qtl2::scan1(genoprobs = genoprobs.1, pheno = pheno_matrix, addcovar = addcovar, kinship = kinship, reml = TRUE, cores = nc)
 fn &lt;- &quot;../data/cc-clinical-timbr.rds&quot;</code></pre>
 <pre class="r"><code>peaks &lt;- qtl2::find_peaks(scan1_output = s1, map = map.1, peakdrop = 1.5, prob = 0.95, cores = nc, threshold = 6) %&gt;%
   tibble::as_tibble()</code></pre>
@@ -400,7 +400,40 @@ if (!file.exists(fn)){
 ## [1] 8000
 ## [1] 9000
 ## [1] 10000
-## [1] Sampling from the conditional posterior
+## [1] Sampling from the full posterior
+## [1] 1000
+## [1] 2000
+## [1] 3000
+## [1] 4000
+## [1] 5000
+## [1] 6000
+## [1] 7000
+## [1] 8000
+## [1] 9000
+## [1] 10000
+## [1] Sampling from the full posterior
+## [1] 1000
+## [1] 2000
+## [1] 3000
+## [1] 4000
+## [1] 5000
+## [1] 6000
+## [1] 7000
+## [1] 8000
+## [1] 9000
+## [1] 10000
+## [1] Sampling from the full posterior
+## [1] 1000
+## [1] 2000
+## [1] 3000
+## [1] 4000
+## [1] 5000
+## [1] 6000
+## [1] 7000
+## [1] 8000
+## [1] 9000
+## [1] 10000
+## [1] Sampling from the full posterior
 ## [1] 1000
 ## [1] 2000
 ## [1] 3000
@@ -511,6 +544,215 @@ if (!file.exists(fn)){
 ## [1] 9000
 ## [1] 10000
 ## [1] Sampling from the conditional posterior
+## [1] 1000
+## [1] 2000
+## [1] 3000
+## [1] 4000
+## [1] 5000
+## [1] 6000
+## [1] 7000
+## [1] 8000
+## [1] 9000
+## [1] 10000
+## [1] Sampling from the full posterior
+## [1] 1000
+## [1] 2000
+## [1] 3000
+## [1] 4000
+## [1] 5000
+## [1] 6000
+## [1] 7000
+## [1] 8000
+## [1] 9000
+## [1] 10000
+## [1] Sampling from the conditional posterior
+## [1] 1000
+## [1] 2000
+## [1] 3000
+## [1] 4000
+## [1] 5000
+## [1] 6000
+## [1] 7000
+## [1] 8000
+## [1] 9000
+## [1] 10000
+## [1] Sampling from the full posterior
+## [1] 1000
+## [1] 2000
+## [1] 3000
+## [1] 4000
+## [1] 5000
+## [1] 6000
+## [1] 7000
+## [1] 8000
+## [1] 9000
+## [1] 10000
+## [1] Sampling from the conditional posterior
+## [1] 1000
+## [1] 2000
+## [1] 3000
+## [1] 4000
+## [1] 5000
+## [1] 6000
+## [1] 7000
+## [1] 8000
+## [1] 9000
+## [1] 10000
+## [1] Sampling from the full posterior
+## [1] 1000
+## [1] 2000
+## [1] 3000
+## [1] 4000
+## [1] 5000
+## [1] 6000
+## [1] 7000
+## [1] 8000
+## [1] 9000
+## [1] 10000
+## [1] Sampling from the conditional posterior
+## [1] 1000
+## [1] 2000
+## [1] 3000
+## [1] 4000
+## [1] 5000
+## [1] 6000
+## [1] 7000
+## [1] 8000
+## [1] 9000
+## [1] 10000
+## [1] Sampling from the full posterior
+## [1] 1000
+## [1] 2000
+## [1] 3000
+## [1] 4000
+## [1] 5000
+## [1] 6000
+## [1] 7000
+## [1] 8000
+## [1] 9000
+## [1] 10000
+## [1] Sampling from the full posterior
+## [1] 1000
+## [1] 2000
+## [1] 3000
+## [1] 4000
+## [1] 5000
+## [1] 6000
+## [1] 7000
+## [1] 8000
+## [1] 9000
+## [1] 10000
+## [1] Sampling from the full posterior
+## [1] 1000
+## [1] 2000
+## [1] 3000
+## [1] 4000
+## [1] 5000
+## [1] 6000
+## [1] 7000
+## [1] 8000
+## [1] 9000
+## [1] 10000
+## [1] Sampling from the conditional posterior
+## [1] 1000
+## [1] 2000
+## [1] 3000
+## [1] 4000
+## [1] 5000
+## [1] 6000
+## [1] 7000
+## [1] 8000
+## [1] 9000
+## [1] 10000
+## [1] Sampling from the full posterior
+## [1] 1000
+## [1] 2000
+## [1] 3000
+## [1] 4000
+## [1] 5000
+## [1] 6000
+## [1] 7000
+## [1] 8000
+## [1] 9000
+## [1] 10000
+## [1] Sampling from the full posterior
+## [1] 1000
+## [1] 2000
+## [1] 3000
+## [1] 4000
+## [1] 5000
+## [1] 6000
+## [1] 7000
+## [1] 8000
+## [1] 9000
+## [1] 10000
+## [1] Sampling from the full posterior
+## [1] 1000
+## [1] 2000
+## [1] 3000
+## [1] 4000
+## [1] 5000
+## [1] 6000
+## [1] 7000
+## [1] 8000
+## [1] 9000
+## [1] 10000
+## [1] Sampling from the conditional posterior
+## [1] 1000
+## [1] 2000
+## [1] 3000
+## [1] 4000
+## [1] 5000
+## [1] 6000
+## [1] 7000
+## [1] 8000
+## [1] 9000
+## [1] 10000
+## [1] Sampling from the full posterior
+## [1] 1000
+## [1] 2000
+## [1] 3000
+## [1] 4000
+## [1] 5000
+## [1] 6000
+## [1] 7000
+## [1] 8000
+## [1] 9000
+## [1] 10000
+## [1] Sampling from the full posterior
+## [1] 1000
+## [1] 2000
+## [1] 3000
+## [1] 4000
+## [1] 5000
+## [1] 6000
+## [1] 7000
+## [1] 8000
+## [1] 9000
+## [1] 10000
+## [1] Sampling from the full posterior
+## [1] 1000
+## [1] 2000
+## [1] 3000
+## [1] 4000
+## [1] 5000
+## [1] 6000
+## [1] 7000
+## [1] 8000
+## [1] 9000
+## [1] 10000
+## [1] Sampling from the full posterior
+## [1] 1000
+## [1] 2000
+## [1] 3000
+## [1] 4000
+## [1] 5000
+## [1] 6000
+## [1] 7000
+## [1] 8000
+## [1] 9000
+## [1] 10000
+## [1] Sampling from the full posterior
 ## [1] 1000
 ## [1] 2000
 ## [1] 3000
