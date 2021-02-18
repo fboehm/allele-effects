@@ -100,3 +100,15 @@ t2 <- t_out_peaks %>%
       dplyr::arrange(cluster)
   })) 
 ```
+
+```{r}
+t2 %>%
+  dplyr::mutate(nr = 1:nrow(t2)) %>%
+  dplyr::mutate(out = purrr::pmap(.l = list(lodcolumn, chr, nr, peak_geno_table_reduced) , .f = function(lodcolumn, chr, nr, peak_geno_table_reduced){
+    csv_fn <- paste0("QTL_", nr, "_", lodcolumn, "_", chr, ".csv")
+    readr::write_csv(x = peak_geno_table_reduced, file = csv_fn)
+  })
+  )
+```
+
+
