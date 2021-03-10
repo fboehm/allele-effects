@@ -119,3 +119,5 @@ t3 %>%
   dplyr::select(- timbr, - peak_allele_probs, - peak_geno_table, - most_probable_series, - most_probable_series_prob, - second_most_probable_series, - second_most_probable_series_prob, - peak_geno_table_reduced) %>%
   gt::gt()
 ```
+
+
