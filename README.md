@@ -1,7 +1,6 @@
 
 # qtl2effects
 
-inferring founder allele effects at previously mapped QTL
 
 This is a collaborative project that involves Rick Baker, Clare Smith,
 me, and Chris Sassetti. My contribution is the bivariate mappings.
